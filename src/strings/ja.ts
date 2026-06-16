@@ -113,11 +113,14 @@ export const RESULT = {
   adjustIncreaseTenYear: '10年間の単純影響額',
   adjustSelected: '総合版へ反映する生活費',
   adjustReset: '元に戻す',
-  // 反映ボタン（フィードバック §4：反映対象と金額を明示）
-  reflectBreakdownBtn: (amount: string) => `内訳合計 ${amount} を生活設計に反映する`,
-  reflectAdjustedBtn: (amount: string) => `改善後の生活費 ${amount} を生活設計に反映する`,
-  reflectedBreakdown: '内訳合計の生活費を生活設計に反映しました。',
-  reflectedAdjusted: '改善後の生活費を生活設計に反映しました。',
+  // 反映ボタン（反映対象と金額を明示。現在 / ざっくり調整後 / カテゴリ別見直し後）
+  reflectHeading: '生活設計に反映する',
+  reflectBreakdownBtn: (amount: string) => `現在の生活費 ${amount} を生活設計に反映する`,
+  reflectQuickBtn: (amount: string) => `ざっくり調整後 ${amount} を生活設計に反映する`,
+  reflectScenarioBtn: (amount: string) => `カテゴリ別見直し後 ${amount} を生活設計に反映する`,
+  reflectedBreakdown: '現在の生活費を生活設計に反映しました。',
+  reflectedQuick: 'ざっくり調整後の生活費を生活設計に反映しました。',
+  reflectedScenario: 'カテゴリ別見直し後の生活費を生活設計に反映しました。',
   reflectFailed: 'この端末では保存できませんでした。設定をご確認のうえ、もう一度お試しください。',
   toComprehensive: '人生全体の資産推移で見る',
   recalc: '条件を変えて再計算',
@@ -247,6 +250,27 @@ export const REVIEW = {
       note: '医療費の削減や健康・医療上の助言を行うものではありません。',
     },
   },
+};
+
+/** カテゴリ別見直しシナリオ（気になる項目を動かしてみる）。 */
+export const SCENARIO = {
+  heading: '気になる項目を動かしてみる',
+  lead: '気になるカテゴリを選んで、見直し後の金額を試してみましょう。元の入力は変わりません。',
+  pickLead: 'カテゴリを選ぶ',
+  current: '現在',
+  scenario: '見直し後',
+  diffMonthly: '毎月の差',
+  diffAnnual: '年間の差',
+  diffTenYears: '10年間の単純差',
+  manualLabel: '金額を入力',
+  carefulManualLabel: '生活設計に見込む金額を入力',
+  carefulNote:
+    '医療費・子ども関連費は、減らす前提ではなく、生活設計に見込む金額を確認する項目です。',
+  resetCategory: '元に戻す',
+  resetAll: '試算をリセットする',
+  trialBadge: '試算中',
+  summaryHeading: '見直し後の生活費',
+  unit: '円',
 };
 
 /** 「人生全体の資産推移で見る」の仮の遷移先（総合版の実 URL は今回変更しない）。 */

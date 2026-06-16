@@ -1,17 +1,20 @@
 import { useState } from 'react';
 import type {
+  CategoryKey,
   LivingCostInput,
   LivingCostResult,
   SelectedMonthlySource,
 } from '../../types/livingCost';
 import { adjustedMonthly, buildStoragePayload } from '../../lib/calc';
 import { getReviewPoints } from '../../lib/reviewRules';
+import { buildCategoryScenario, hasCategoryScenario } from '../../lib/categoryScenario';
 import { saveLivingCost } from '../../lib/storage';
 import { formatManYen, formatMonthlyYen, formatYen } from '../../lib/format';
 import { CATEGORY_LABELS, COMPREHENSIVE_URL_PLACEHOLDER, INPUT, RESULT } from '../../strings/ja';
 import DetailCard from './DetailCard';
 import BreakdownBars from './BreakdownBars';
 import ReviewPoints from './ReviewPoints';
+import CategoryScenario from './CategoryScenario';
 import FixedVariableDonut from './FixedVariableDonut';
 import HouseholdComparison from './HouseholdComparison';
 import QuickAdjust from './QuickAdjust';
@@ -23,22 +26,30 @@ interface Props {
 }
 
 export default function ResultScreen({ input, result, onRecalc }: Props) {
-  // QuickAdjust の試算（試算用の一時変更。入力条件そのものは変えない）。
+  // QuickAdjust（ざっくり）とカテゴリ別シナリオは独立した一時試算。入力条件は変えない。
   const [reduction, setReduction] = useState(0);
+  const [scenarioOverrides, setScenarioOverrides] = useState<Partial<Record<CategoryKey, number>>>({});
   const [savedMessage, setSavedMessage] = useState<string | null>(null);
 
-  const hasAdjusted = reduction > 0;
-  const adjustedTotal = adjustedMonthly(result.monthlyTotal, reduction);
+  const hasQuickAdjust = reduction > 0;
+  const quickAdjustedTotal = adjustedMonthly(result.monthlyTotal, reduction);
   const showReferenceDiff =
     result.referenceDiff != null && Math.abs(result.referenceDiff) >= 10000;
   const reviewPoints = getReviewPoints(result);
+  const reviewKeys = reviewPoints
+    .map((p) => p.categoryKey)
+    .filter((k): k is CategoryKey => k != null);
+
+  const scenario = buildCategoryScenario(result, scenarioOverrides);
+  const hasScenario = hasCategoryScenario(scenario);
 
   const reflect = (source: SelectedMonthlySource) => {
     const payload = buildStoragePayload({
       result,
       categories: input.categories,
       selectedSource: source,
-      adjustedMonthlyTotal: hasAdjusted ? adjustedTotal : undefined,
+      quickAdjustedMonthlyTotal: hasQuickAdjust ? quickAdjustedTotal : undefined,
+      categoryScenario: hasScenario ? scenario : undefined,
     });
     const ok = saveLivingCost(payload);
     if (!ok) {
@@ -46,7 +57,11 @@ export default function ResultScreen({ input, result, onRecalc }: Props) {
       return;
     }
     setSavedMessage(
-      source === 'adjustedMonthlyTotal' ? RESULT.reflectedAdjusted : RESULT.reflectedBreakdown,
+      source === 'quickAdjust'
+        ? RESULT.reflectedQuick
+        : source === 'categoryScenario'
+          ? RESULT.reflectedScenario
+          : RESULT.reflectedBreakdown,
     );
   };
 
@@ -99,6 +114,14 @@ export default function ResultScreen({ input, result, onRecalc }: Props) {
 
       {/* 生活費で確認したいポイント（QuickAdjust の直後・改善検討の主役） */}
       <ReviewPoints points={reviewPoints} />
+
+      {/* 気になる項目を動かしてみる（カテゴリ別見直しシナリオ） */}
+      <CategoryScenario
+        result={result}
+        overrides={scenarioOverrides}
+        reviewKeys={reviewKeys}
+        onChange={setScenarioOverrides}
+      />
 
       {/* 固定費 / 変動費の割合（ドーナツ） */}
       <section className="card">
@@ -165,7 +188,7 @@ export default function ResultScreen({ input, result, onRecalc }: Props) {
         </div>
       </details>
 
-      {/* 反映ボタン（反映対象と金額を明示。フィードバック §4） */}
+      {/* 反映ボタン（現在 / ざっくり調整後 / カテゴリ別見直し後を明示） */}
       <section className="card reflect">
         <button
           type="button"
@@ -174,13 +197,22 @@ export default function ResultScreen({ input, result, onRecalc }: Props) {
         >
           {RESULT.reflectBreakdownBtn(formatManYen(result.breakdownTotal))}
         </button>
-        {hasAdjusted && (
+        {hasQuickAdjust && (
           <button
             type="button"
             className="btn btn--recommended btn--block"
-            onClick={() => reflect('adjustedMonthlyTotal')}
+            onClick={() => reflect('quickAdjust')}
           >
-            {RESULT.reflectAdjustedBtn(formatManYen(adjustedTotal))}
+            {RESULT.reflectQuickBtn(formatManYen(quickAdjustedTotal))}
+          </button>
+        )}
+        {hasScenario && (
+          <button
+            type="button"
+            className="btn btn--recommended btn--block"
+            onClick={() => reflect('categoryScenario')}
+          >
+            {RESULT.reflectScenarioBtn(formatManYen(scenario.scenarioMonthlyTotal))}
           </button>
         )}
         {savedMessage && (

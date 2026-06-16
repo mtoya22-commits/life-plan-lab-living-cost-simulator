@@ -8,6 +8,7 @@ import {
   sanitizeAmount,
   sumBreakdown,
 } from '../../src/lib/calc';
+import { buildCategoryScenario } from '../../src/lib/categoryScenario';
 import type { CategoryAmounts, LivingCostInput } from '../../src/types/livingCost';
 
 const emptyCategories: CategoryAmounts = {
@@ -185,18 +186,27 @@ describe('adjustedMonthly', () => {
 });
 
 describe('resolveSelectedMonthly', () => {
-  const values = { adjustedMonthlyTotal: 280000, breakdownTotal: 310000 };
+  const values = {
+    breakdownTotal: 310000,
+    quickAdjustedMonthlyTotal: 280000,
+    categoryScenarioMonthlyTotal: 297000,
+  };
 
   it('breakdownTotal を選ぶ', () => {
     expect(resolveSelectedMonthly('breakdownTotal', values)).toBe(310000);
   });
 
-  it('adjustedMonthlyTotal を選ぶ', () => {
-    expect(resolveSelectedMonthly('adjustedMonthlyTotal', values)).toBe(280000);
+  it('quickAdjust を選ぶ', () => {
+    expect(resolveSelectedMonthly('quickAdjust', values)).toBe(280000);
   });
 
-  it('改善値が無ければ breakdownTotal にフォールバック', () => {
-    expect(resolveSelectedMonthly('adjustedMonthlyTotal', { breakdownTotal: 310000 })).toBe(310000);
+  it('categoryScenario を選ぶ', () => {
+    expect(resolveSelectedMonthly('categoryScenario', values)).toBe(297000);
+  });
+
+  it('値が無ければ breakdownTotal にフォールバック', () => {
+    expect(resolveSelectedMonthly('quickAdjust', { breakdownTotal: 310000 })).toBe(310000);
+    expect(resolveSelectedMonthly('categoryScenario', { breakdownTotal: 310000 })).toBe(310000);
   });
 });
 
@@ -246,32 +256,61 @@ describe('buildStoragePayload', () => {
     });
     expect(payload.livingCost.breakdownTotal).toBe(310000);
     expect(payload.livingCost.selectedMonthlyTotal).toBe(310000);
-    expect(['breakdownTotal', 'adjustedMonthlyTotal']).toContain(
+    expect(['breakdownTotal', 'quickAdjust', 'categoryScenario']).toContain(
       payload.livingCost.selectedMonthlySource,
     );
   });
 
-  it('内訳合計を反映 → source は breakdownTotal、値も内訳合計', () => {
+  it('現在の生活費（内訳合計）を反映 → source は breakdownTotal', () => {
     const payload = buildStoragePayload({
       result,
       categories: sampleInput.categories,
       selectedSource: 'breakdownTotal',
-      adjustedMonthlyTotal: 280000,
+      quickAdjustedMonthlyTotal: 280000,
     });
     expect(payload.livingCost.selectedMonthlySource).toBe('breakdownTotal');
     expect(payload.livingCost.selectedMonthlyTotal).toBe(310000);
-    expect(payload.livingCost.adjustedMonthlyTotal).toBe(280000);
+    expect(payload.livingCost.quickAdjustedMonthlyTotal).toBe(280000);
   });
 
-  it('改善後の生活費を反映 → source は adjustedMonthlyTotal、値も改善後', () => {
+  it('ざっくり調整後を反映 → source は quickAdjust、値も調整後', () => {
     const payload = buildStoragePayload({
       result,
       categories: sampleInput.categories,
-      selectedSource: 'adjustedMonthlyTotal',
-      adjustedMonthlyTotal: 280000,
+      selectedSource: 'quickAdjust',
+      quickAdjustedMonthlyTotal: 280000,
     });
-    expect(payload.livingCost.selectedMonthlySource).toBe('adjustedMonthlyTotal');
+    expect(payload.livingCost.selectedMonthlySource).toBe('quickAdjust');
     expect(payload.livingCost.selectedMonthlyTotal).toBe(280000);
+  });
+
+  it('カテゴリ別見直し後を反映 → source は categoryScenario、scenario も保存', () => {
+    const scenario = buildCategoryScenario(result, { communication: 13000 });
+    const payload = buildStoragePayload({
+      result,
+      categories: sampleInput.categories,
+      selectedSource: 'categoryScenario',
+      categoryScenario: scenario,
+    });
+    expect(payload.livingCost.selectedMonthlySource).toBe('categoryScenario');
+    expect(payload.livingCost.selectedMonthlyTotal).toBe(scenario.scenarioMonthlyTotal);
+    expect(payload.livingCost.categoryScenarioMonthlyTotal).toBe(scenario.scenarioMonthlyTotal);
+    expect(payload.livingCost.categoryScenario).toEqual(scenario);
+  });
+
+  it('quickAdjust と categoryScenario は別 source として扱える', () => {
+    const scenario = buildCategoryScenario(result, { communication: 13000 });
+    const q = buildStoragePayload({
+      result,
+      categories: sampleInput.categories,
+      selectedSource: 'quickAdjust',
+      quickAdjustedMonthlyTotal: 280000,
+      categoryScenario: scenario,
+    });
+    // quickAdjust を選んでも categoryScenario の情報は保存され、選択ソースは quickAdjust。
+    expect(q.livingCost.selectedMonthlySource).toBe('quickAdjust');
+    expect(q.livingCost.selectedMonthlyTotal).toBe(280000);
+    expect(q.livingCost.categoryScenario).toEqual(scenario);
   });
 });
 
