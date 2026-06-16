@@ -1,5 +1,5 @@
 import { useMemo, useState } from 'react';
-import type { CategoryAmounts, LivingCostInput } from './types/livingCost';
+import type { CategoryAmounts, HouseholdSize, LivingCostInput } from './types/livingCost';
 import { calcResult, sanitizeAmount } from './lib/calc';
 import { CATEGORY_KEYS } from './lib/classification';
 import IntroScreen from './features/intro/IntroScreen';
@@ -28,10 +28,11 @@ export default function App() {
   const [phase, setPhase] = useState<Phase>('intro');
   const [referenceMonthlyTotal] = useState<number | undefined>(readReferenceMonthly);
   const [categories, setCategories] = useState<CategoryAmounts>(emptyCategories);
+  const [householdSize, setHouseholdSize] = useState<HouseholdSize | undefined>(undefined);
 
   const input: LivingCostInput = useMemo(
-    () => ({ categories, referenceMonthlyTotal }),
-    [categories, referenceMonthlyTotal],
+    () => ({ categories, referenceMonthlyTotal, householdSize }),
+    [categories, referenceMonthlyTotal, householdSize],
   );
 
   // 入力が変わるたびに結果を再計算（純粋関数）。
@@ -44,8 +45,10 @@ export default function App() {
       {phase === 'input' && (
         <InputScreen
           categories={categories}
+          householdSize={householdSize}
           result={result}
           onChange={setCategories}
+          onHouseholdChange={setHouseholdSize}
           onBack={() => setPhase('intro')}
           onSubmit={() => setPhase('result')}
         />

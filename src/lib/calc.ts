@@ -8,6 +8,7 @@ import type {
   StoredLivingCostPayload,
 } from '../types/livingCost';
 import { CATEGORY_KEYS, COST_TYPE } from './classification';
+import { compareWithReference } from './reference';
 
 const MONTHS_PER_YEAR = 12;
 const MONTHS_PER_DECADE = 120;
@@ -108,6 +109,10 @@ export function calcResult(
     referenceMonthlyTotal,
     referenceDiff:
       referenceMonthlyTotal != null ? referenceMonthlyTotal - breakdownTotal : undefined,
+    householdComparison:
+      input.householdSize != null
+        ? compareWithReference(breakdownTotal, input.householdSize)
+        : undefined,
   };
 }
 
@@ -151,6 +156,9 @@ export function buildStoragePayload(params: {
     breakdownTotal: result.breakdownTotal,
   });
 
+  // 世帯人数が入力されている場合のみ、参考比較の値も保存する。
+  const hc = result.householdComparison;
+
   return {
     version: 1,
     source: 'living-cost-simulator',
@@ -165,6 +173,13 @@ export function buildStoragePayload(params: {
       breakdownTotal: result.breakdownTotal,
       fixedCostTotal: result.fixedTotal,
       variableCostTotal: result.variableTotal,
+      ...(hc != null
+        ? {
+            householdSize: hc.householdSize,
+            householdReferenceMonthly: hc.referenceMonthly,
+            householdReferenceDiffMonthly: hc.diffMonthly,
+          }
+        : {}),
       categories: sanitizeCategories(categories),
     },
   };

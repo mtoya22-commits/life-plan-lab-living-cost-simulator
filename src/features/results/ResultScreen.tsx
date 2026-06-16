@@ -11,6 +11,7 @@ import { CATEGORY_LABELS, COMPREHENSIVE_URL_PLACEHOLDER, INPUT, RESULT } from '.
 import DetailCard from './DetailCard';
 import BreakdownBars from './BreakdownBars';
 import FixedVariableDonut from './FixedVariableDonut';
+import HouseholdComparison from './HouseholdComparison';
 import QuickAdjust from './QuickAdjust';
 
 interface Props {
@@ -117,6 +118,11 @@ export default function ResultScreen({ input, result, onRecalc }: Props) {
         <h2 className="section-heading">{RESULT.breakdownHeading}</h2>
         <BreakdownBars shares={result.shares} />
       </section>
+
+      {/* 世帯人数別の一般的な支出目安との参考比較（任意入力時のみ） */}
+      {result.householdComparison && (
+        <HouseholdComparison data={result.householdComparison} />
+      )}
 
       {/* 金額が大きいカテゴリ（上位3件・中立表現） */}
       {result.topCategories.length > 0 && (

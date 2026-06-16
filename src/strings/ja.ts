@@ -138,5 +138,41 @@ export const RESULT = {
   disclaimerHeading: 'このシミュレーションについて',
 };
 
+/** 世帯人数の入力（任意）。 */
+export const HOUSEHOLD = {
+  label: '世帯人数',
+  help: '一般的な支出目安と比べるために使います。未入力でも試算できます。',
+  options: [
+    { value: 1, label: '1人' },
+    { value: 2, label: '2人' },
+    { value: 3, label: '3人' },
+    { value: 4, label: '4人' },
+    { value: 5, label: '5人以上' },
+  ] as const,
+};
+
+/** 世帯人数別の一般的な支出目安との参考比較（評価ではなく参考表示）。 */
+export const COMPARISON = {
+  heading: '一般的な支出目安との参考比較',
+  actualLabel: '今回の生活費',
+  referenceLabel: (size: number) => `${size === 5 ? '5人以上' : `${size}人`}世帯の目安`,
+  diffLabel: '差額',
+  // やわらかいコメント。断定・否定（無駄・削る・高すぎ・必要）は使わない。
+  labels: {
+    near: '一般的な目安に近い水準です',
+    slightlyHigh: '一般的な目安よりやや高めです',
+    high: '一般的な目安より高めです',
+    slightlyLow: '一般的な目安よりやや低めです',
+    low: '一般的な目安より低めです',
+  },
+  notes: [
+    'この目安は、総務省「家計調査年報」2025年などをもとにした参考値です。',
+    '地域・年齢・子どもの年齢・車の有無・住宅費・教育費などで生活費は大きく変わります。',
+    'この生活費見直しシミュレーターでは、住宅ローン返済額や大学費用などの大きな教育費を除く前提のため、一般的な消費支出データとは完全には一致しません。',
+    '一般的な目安より高い・低いこと自体が、良い悪いを示すものではありません。',
+  ],
+  notesHeading: 'この参考比較について',
+};
+
 /** 「人生全体の資産推移で見る」の仮の遷移先（総合版の実 URL は今回変更しない）。 */
 export const COMPREHENSIVE_URL_PLACEHOLDER = 'https://example.com/life-plan-lab/';

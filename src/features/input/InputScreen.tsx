@@ -1,19 +1,34 @@
-import type { CategoryAmounts, CategoryKey, LivingCostResult } from '../../types/livingCost';
+import type {
+  CategoryAmounts,
+  CategoryKey,
+  HouseholdSize,
+  LivingCostResult,
+} from '../../types/livingCost';
 import { CATEGORY_KEYS } from '../../lib/classification';
 import { formatManYen, formatMonthlyYen } from '../../lib/format';
-import { CATEGORY_HELP, CATEGORY_LABELS, INPUT } from '../../strings/ja';
+import { CATEGORY_HELP, CATEGORY_LABELS, HOUSEHOLD, INPUT } from '../../strings/ja';
 import QuestionCard from './QuestionCard';
 import NumberField from './NumberField';
 
 interface Props {
   categories: CategoryAmounts;
+  householdSize: HouseholdSize | undefined;
   result: LivingCostResult;
   onChange: (categories: CategoryAmounts) => void;
+  onHouseholdChange: (size: HouseholdSize | undefined) => void;
   onBack: () => void;
   onSubmit: () => void;
 }
 
-export default function InputScreen({ categories, result, onChange, onBack, onSubmit }: Props) {
+export default function InputScreen({
+  categories,
+  householdSize,
+  result,
+  onChange,
+  onHouseholdChange,
+  onBack,
+  onSubmit,
+}: Props) {
   const setCategory = (key: CategoryKey, value: number) =>
     onChange({ ...categories, [key]: value });
 
@@ -58,6 +73,31 @@ export default function InputScreen({ categories, result, onChange, onBack, onSu
             <p className="muted">{INPUT.educationNote}</p>
           </div>
         </details>
+
+        {/* 世帯人数（任意）。カテゴリ入力の前に置く。 */}
+        <div className="qcard">
+          <div className="qcard__head">
+            <span className="qcard__title">{HOUSEHOLD.label}</span>
+          </div>
+          <p className="muted field-note" style={{ marginTop: 0, marginBottom: 8 }}>
+            {HOUSEHOLD.help}
+          </p>
+          <div className="choice-group">
+            {HOUSEHOLD.options.map((opt) => (
+              <button
+                key={opt.value}
+                type="button"
+                className={`choice${householdSize === opt.value ? ' choice--selected' : ''}`}
+                aria-pressed={householdSize === opt.value}
+                onClick={() =>
+                  onHouseholdChange(householdSize === opt.value ? undefined : opt.value)
+                }
+              >
+                {opt.label}
+              </button>
+            ))}
+          </div>
+        </div>
 
         <h2 className="section-heading">{INPUT.breakdownHeading}</h2>
         {CATEGORY_KEYS.map((key) => (
