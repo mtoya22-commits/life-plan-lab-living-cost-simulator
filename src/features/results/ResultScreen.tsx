@@ -5,11 +5,13 @@ import type {
   SelectedMonthlySource,
 } from '../../types/livingCost';
 import { adjustedMonthly, buildStoragePayload } from '../../lib/calc';
+import { getReviewPoints } from '../../lib/reviewRules';
 import { saveLivingCost } from '../../lib/storage';
 import { formatManYen, formatMonthlyYen, formatYen } from '../../lib/format';
 import { CATEGORY_LABELS, COMPREHENSIVE_URL_PLACEHOLDER, INPUT, RESULT } from '../../strings/ja';
 import DetailCard from './DetailCard';
 import BreakdownBars from './BreakdownBars';
+import ReviewPoints from './ReviewPoints';
 import FixedVariableDonut from './FixedVariableDonut';
 import HouseholdComparison from './HouseholdComparison';
 import QuickAdjust from './QuickAdjust';
@@ -29,6 +31,7 @@ export default function ResultScreen({ input, result, onRecalc }: Props) {
   const adjustedTotal = adjustedMonthly(result.monthlyTotal, reduction);
   const showReferenceDiff =
     result.referenceDiff != null && Math.abs(result.referenceDiff) >= 10000;
+  const reviewPoints = getReviewPoints(result);
 
   const reflect = (source: SelectedMonthlySource) => {
     const payload = buildStoragePayload({
@@ -93,6 +96,9 @@ export default function ResultScreen({ input, result, onRecalc }: Props) {
         reduction={reduction}
         onReductionChange={setReduction}
       />
+
+      {/* 生活費で確認したいポイント（QuickAdjust の直後・改善検討の主役） */}
+      <ReviewPoints points={reviewPoints} />
 
       {/* 固定費 / 変動費の割合（ドーナツ） */}
       <section className="card">
