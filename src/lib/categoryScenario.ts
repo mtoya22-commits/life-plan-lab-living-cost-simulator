@@ -74,3 +74,20 @@ export function buildCategoryScenario(
 export function hasCategoryScenario(scenario: CategoryScenarioResult): boolean {
   return scenario.adjustments.length > 0 && scenario.diffMonthly !== 0;
 }
+
+/**
+ * カテゴリチップの並び順を決める。
+ * priorityKeys（見直しポイント→構成比が大きめ→金額が大きい、の順で重複排除済み）を
+ * available の範囲で先頭に置き、残りは CATEGORY_KEYS の順で続ける。
+ */
+export function orderScenarioKeys(
+  available: CategoryKey[],
+  priorityKeys: CategoryKey[],
+): CategoryKey[] {
+  const head: CategoryKey[] = [];
+  for (const key of priorityKeys) {
+    if (available.includes(key) && !head.includes(key)) head.push(key);
+  }
+  const rest = CATEGORY_KEYS.filter((k) => available.includes(k) && !head.includes(k));
+  return [...head, ...rest];
+}

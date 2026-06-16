@@ -5,6 +5,7 @@ import {
   CAREFUL_CATEGORIES,
   SCENARIO_STEPS,
   buildCategoryScenario,
+  orderScenarioKeys,
 } from '../../lib/categoryScenario';
 import { formatManYen, formatMonthlyYen, formatYen } from '../../lib/format';
 import { CATEGORY_LABELS, SCENARIO } from '../../strings/ja';
@@ -15,20 +16,17 @@ type Overrides = Partial<Record<CategoryKey, number>>;
 interface Props {
   result: LivingCostResult;
   overrides: Overrides;
-  /** 見直しポイントに出たカテゴリ（チップを先頭に並べる）。 */
-  reviewKeys: CategoryKey[];
+  /** チップを先頭に並べる優先カテゴリ（見直しポイント→構成比→金額順、重複排除済み）。 */
+  priorityKeys: CategoryKey[];
   onChange: (overrides: Overrides) => void;
 }
 
-export default function CategoryScenario({ result, overrides, reviewKeys, onChange }: Props) {
+export default function CategoryScenario({ result, overrides, priorityKeys, onChange }: Props) {
   const currentOf = (key: CategoryKey) => result.shares.find((s) => s.key === key)?.amount ?? 0;
 
-  // 入力済み（>0）のカテゴリのみ対象。見直しポイントのカテゴリを先頭に並べる（案B）。
+  // 入力済み（>0）のカテゴリのみ対象。優先カテゴリを先頭に並べる（案B）。
   const available = CATEGORY_KEYS.filter((k) => currentOf(k) > 0);
-  const ordered = [
-    ...reviewKeys.filter((k) => available.includes(k)),
-    ...available.filter((k) => !reviewKeys.includes(k)),
-  ];
+  const ordered = orderScenarioKeys(available, priorityKeys);
 
   const [picked, setPicked] = useState<CategoryKey | null>(null);
   const selected = picked && ordered.includes(picked) ? picked : ordered[0] ?? null;

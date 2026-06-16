@@ -8,12 +8,14 @@ import type {
 import { adjustedMonthly, buildStoragePayload } from '../../lib/calc';
 import { getReviewPoints } from '../../lib/reviewRules';
 import { buildCategoryScenario, hasCategoryScenario } from '../../lib/categoryScenario';
+import { buildCompositionComparison } from '../../lib/compositionReference';
 import { saveLivingCost } from '../../lib/storage';
 import { formatManYen, formatMonthlyYen, formatYen } from '../../lib/format';
 import { CATEGORY_LABELS, COMPREHENSIVE_URL_PLACEHOLDER, INPUT, RESULT } from '../../strings/ja';
 import DetailCard from './DetailCard';
 import BreakdownBars from './BreakdownBars';
 import ReviewPoints from './ReviewPoints';
+import CompositionReference from './CompositionReference';
 import CategoryScenario from './CategoryScenario';
 import FixedVariableDonut from './FixedVariableDonut';
 import HouseholdComparison from './HouseholdComparison';
@@ -39,6 +41,12 @@ export default function ResultScreen({ input, result, onRecalc }: Props) {
   const reviewKeys = reviewPoints
     .map((p) => p.categoryKey)
     .filter((k): k is CategoryKey => k != null);
+
+  const composition = buildCompositionComparison(result);
+  const compositionHighKeys = composition.highlightedItems.map((i) => i.categoryKey);
+  const topKeys = result.topCategories.map((c) => c.key);
+  // チップ並びの優先度: 見直しポイント → 構成比が大きめ → 金額が大きい → その他。
+  const priorityKeys = [...new Set<CategoryKey>([...reviewKeys, ...compositionHighKeys, ...topKeys])];
 
   const scenario = buildCategoryScenario(result, scenarioOverrides);
   const hasScenario = hasCategoryScenario(scenario);
@@ -115,11 +123,14 @@ export default function ResultScreen({ input, result, onRecalc }: Props) {
       {/* 生活費で確認したいポイント（QuickAdjust の直後・改善検討の主役） */}
       <ReviewPoints points={reviewPoints} />
 
+      {/* 支出バランスの参考比較（構成比ベース） */}
+      <CompositionReference data={composition} />
+
       {/* 気になる項目を動かしてみる（カテゴリ別見直しシナリオ） */}
       <CategoryScenario
         result={result}
         overrides={scenarioOverrides}
-        reviewKeys={reviewKeys}
+        priorityKeys={priorityKeys}
         onChange={setScenarioOverrides}
       />
 

@@ -144,6 +144,38 @@ export interface CategoryScenarioResult {
   adjustments: CategoryAdjustment[];
 }
 
+/** 支出バランスの参考比較の度合い（構成比ベース。評価ではなく参考）。 */
+export type CompositionLevel = 'muchHigher' | 'higher' | 'near' | 'lower';
+
+/** 支出バランスの参考比較の1カテゴリ分。 */
+export interface CompositionComparisonItem {
+  categoryKey: CategoryKey;
+  label: string;
+  userMonthly: number;
+  /** 比較対象内での構成比（user / comparableTotal）。 */
+  userShare: number;
+  /** 参考の構成比（reference / referenceComparableTotal）。 */
+  referenceShare: number;
+  /** userShare / referenceShare。 */
+  balanceIndex: number;
+  /** 食費を1とした比（食費が小さすぎる場合は付けない）。 */
+  userFoodRatio?: number;
+  referenceFoodRatio?: number;
+  level: CompositionLevel;
+  message: string;
+}
+
+/** 支出バランスの参考比較の結果。 */
+export interface CompositionComparisonResult {
+  comparableTotal: number;
+  referenceComparableTotal: number;
+  items: CompositionComparisonItem[];
+  /** higher / muchHigher のみ（最大3件）。lowData のときは空。 */
+  highlightedItems: CompositionComparisonItem[];
+  /** 比較対象の入力が少なすぎて、強い比較表示を控えるべきか。 */
+  lowData: boolean;
+}
+
 /** localStorage に保存する生活費データ本体。 */
 export interface StoredLivingCost {
   /** 内訳合計（＝毎月生活費の総額）。 */
