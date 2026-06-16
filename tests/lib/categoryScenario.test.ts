@@ -5,9 +5,10 @@ import {
   SCENARIO_STEPS,
   buildCategoryScenario,
   hasCategoryScenario,
+  orderScenarioKeys,
 } from '../../src/lib/categoryScenario';
 import { SCENARIO } from '../../src/strings/ja';
-import type { CategoryAmounts, LivingCostInput } from '../../src/types/livingCost';
+import type { CategoryAmounts, CategoryKey, LivingCostInput } from '../../src/types/livingCost';
 
 const emptyCategories: CategoryAmounts = {
   food: 0,
@@ -108,6 +109,28 @@ describe('SCENARIO_STEPS — 慎重カテゴリ', () => {
   it('見直しやすい固定費にはステップがある', () => {
     expect(SCENARIO_STEPS.communication.length).toBeGreaterThan(0);
     expect(SCENARIO_STEPS.subscription.length).toBeGreaterThan(0);
+  });
+});
+
+describe('orderScenarioKeys — チップ並び順', () => {
+  const available: CategoryKey[] = ['food', 'communication', 'car', 'leisure'];
+
+  it('優先カテゴリ（構成比が大きめ等）を先頭に並べる', () => {
+    // car を構成比高として優先指定 → 先頭に来る。
+    const ordered = orderScenarioKeys(available, ['car']);
+    expect(ordered[0]).toBe('car');
+    expect(ordered).toEqual(['car', 'food', 'communication', 'leisure']);
+  });
+
+  it('priorityKeys の順序を保ち、重複・対象外は無視する', () => {
+    const ordered = orderScenarioKeys(available, ['leisure', 'communication', 'leisure', 'utilities']);
+    expect(ordered).toEqual(['leisure', 'communication', 'food', 'car']);
+  });
+
+  it('available に無いカテゴリは並びに入らない', () => {
+    const ordered = orderScenarioKeys(available, ['medical']);
+    expect(ordered).not.toContain('medical');
+    expect(ordered).toHaveLength(available.length);
   });
 });
 
