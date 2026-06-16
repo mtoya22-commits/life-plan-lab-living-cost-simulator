@@ -6,10 +6,11 @@ import type {
 } from '../../types/livingCost';
 import { adjustedMonthly, buildStoragePayload, improvementEffect } from '../../lib/calc';
 import { saveLivingCost } from '../../lib/storage';
-import { formatManYen, formatMonthlyYen, formatPercent, formatYen } from '../../lib/format';
-import { CATEGORY_LABELS, COMPREHENSIVE_URL_PLACEHOLDER, RESULT } from '../../strings/ja';
+import { formatManYen, formatMonthlyYen, formatYen } from '../../lib/format';
+import { CATEGORY_LABELS, COMPREHENSIVE_URL_PLACEHOLDER, INPUT, RESULT } from '../../strings/ja';
 import DetailCard from './DetailCard';
 import BreakdownBars from './BreakdownBars';
+import FixedVariableDonut from './FixedVariableDonut';
 import QuickAdjust from './QuickAdjust';
 
 interface Props {
@@ -27,8 +28,8 @@ export default function ResultScreen({ input, result, onRecalc }: Props) {
 
   const hasAdjusted = reduction > 0;
   const adjustedTotal = adjustedMonthly(result.monthlyTotal, reduction);
-  const fixedRatio =
-    result.monthlyTotal > 0 ? result.fixedTotal / result.monthlyTotal : 0;
+  const showReferenceDiff =
+    result.referenceDiff != null && Math.abs(result.referenceDiff) >= 10000;
 
   const reflect = (source: SelectedMonthlySource) => {
     const payload = buildStoragePayload({
@@ -43,37 +44,48 @@ export default function ResultScreen({ input, result, onRecalc }: Props) {
       return;
     }
     setSavedMessage(
-      source === 'adjustedMonthlyTotal'
-        ? RESULT.reflectedAdjusted
-        : source === 'breakdownTotal'
-          ? RESULT.reflectedBreakdown
-          : RESULT.reflectedCurrent,
+      source === 'adjustedMonthlyTotal' ? RESULT.reflectedAdjusted : RESULT.reflectedBreakdown,
     );
   };
 
   return (
     <div className="screen fade-rise">
-      {/* Hero: 結論を隠さない（申し送り §4） */}
+      {/* Hero: 結論を隠さない（申し送り §4）。総額は万円を主表示、円を補足。 */}
       <header className="result-hero">
         <h1 className="section-heading">{RESULT.heading}</h1>
         <div className="result-hero__grid">
-          <DetailCard label={RESULT.monthlyTotal} value={formatMonthlyYen(result.monthlyTotal)} emphasis />
-          <DetailCard label={RESULT.annualTotal} value={formatYen(result.annualTotal)} emphasis />
-        </div>
-        <div className="result-hero__grid">
           <DetailCard
-            label={RESULT.fixedTotal}
-            value={formatYen(result.fixedTotal)}
-            caption={`内訳のうち約${formatPercent(fixedRatio)}`}
+            label={RESULT.monthlyTotal}
+            value={`${formatManYen(result.monthlyTotal)}/月`}
+            caption={formatMonthlyYen(result.monthlyTotal)}
+            emphasis
           />
-          <DetailCard label={RESULT.variableTotal} value={formatYen(result.variableTotal)} />
+          <DetailCard
+            label={RESULT.annualTotal}
+            value={formatManYen(result.annualTotal)}
+            caption={formatYen(result.annualTotal)}
+            emphasis
+          />
         </div>
+        <p className="muted field-note">{RESULT.monthlyNote}</p>
       </header>
 
-      {result.isOverBudget && (
-        <p className="notice" role="status">
-          {RESULT.overBudgetNotice}
-        </p>
+      {result.referenceMonthlyTotal != null && (
+        <section className="card reference">
+          <div className="reference__row">
+            <span className="muted">{INPUT.referenceLabel}</span>
+            <span>{formatMonthlyYen(result.referenceMonthlyTotal)}</span>
+          </div>
+          <div className="reference__row">
+            <span className="muted">{INPUT.breakdownLabel}</span>
+            <span>{formatMonthlyYen(result.breakdownTotal)}</span>
+          </div>
+          {showReferenceDiff && (
+            <p className="notice" role="status">
+              {RESULT.referenceDiffNotice}
+            </p>
+          )}
+        </section>
       )}
 
       {/* What-if を上に（申し送り §4） */}
@@ -83,21 +95,15 @@ export default function ResultScreen({ input, result, onRecalc }: Props) {
         onReductionChange={setReduction}
       />
 
-      {/* 支出内訳グラフ */}
+      {/* 固定費 / 変動費の割合（ドーナツ） */}
       <section className="card">
-        <h2 className="section-heading">{RESULT.breakdownHeading}</h2>
-        <BreakdownBars shares={result.shares} />
-        <div className="result-hero__grid result-hero__grid--sub">
-          <DetailCard
-            label={RESULT.breakdownTotal}
-            value={formatYen(result.breakdownTotal)}
-          />
-          <DetailCard
-            label={RESULT.uncategorized}
-            value={formatYen(result.uncategorized)}
-            caption={RESULT.uncategorizedNote}
-          />
-        </div>
+        <h2 className="section-heading">{RESULT.fixedVariableHeading}</h2>
+        <FixedVariableDonut
+          fixedTotal={result.fixedTotal}
+          variableTotal={result.variableTotal}
+          fixedRatio={result.fixedRatio}
+          variableRatio={result.variableRatio}
+        />
         <details className="collapsible collapsible--muted">
           <summary>固定費・変動費について</summary>
           <div className="collapsible__body">
@@ -106,7 +112,13 @@ export default function ResultScreen({ input, result, onRecalc }: Props) {
         </details>
       </section>
 
-      {/* 見直し余地がありそうなカテゴリ（上位3件） */}
+      {/* 支出内訳グラフ（横棒） */}
+      <section className="card">
+        <h2 className="section-heading">{RESULT.breakdownHeading}</h2>
+        <BreakdownBars shares={result.shares} />
+      </section>
+
+      {/* 金額が大きいカテゴリ（上位3件・中立表現） */}
       {result.topCategories.length > 0 && (
         <section className="card">
           <h2 className="section-heading">{RESULT.topHeading}</h2>
@@ -164,10 +176,14 @@ export default function ResultScreen({ input, result, onRecalc }: Props) {
         </div>
       </details>
 
-      {/* 反映ボタン（現在 / 改善後 を混同しない。フィードバック §4） */}
+      {/* 反映ボタン（反映対象と金額を明示。フィードバック §4） */}
       <section className="card reflect">
-        <button type="button" className="btn btn--primary btn--block" onClick={() => reflect('monthlyTotal')}>
-          {RESULT.reflectCurrentBtn}
+        <button
+          type="button"
+          className="btn btn--primary btn--block"
+          onClick={() => reflect('breakdownTotal')}
+        >
+          {RESULT.reflectBreakdownBtn(formatManYen(result.breakdownTotal))}
         </button>
         {hasAdjusted && (
           <button
@@ -175,12 +191,7 @@ export default function ResultScreen({ input, result, onRecalc }: Props) {
             className="btn btn--recommended btn--block"
             onClick={() => reflect('adjustedMonthlyTotal')}
           >
-            {RESULT.reflectAdjustedBtn}
-          </button>
-        )}
-        {result.isOverBudget && (
-          <button type="button" className="btn btn--block" onClick={() => reflect('breakdownTotal')}>
-            {RESULT.reflectBreakdownBtn}
+            {RESULT.reflectAdjustedBtn(formatManYen(adjustedTotal))}
           </button>
         )}
         {savedMessage && (

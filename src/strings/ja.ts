@@ -55,15 +55,15 @@ export const INTRO = {
 
 export const INPUT = {
   heading: '毎月の生活費を入力',
-  lead: '分かる範囲で入力してください。未入力の項目は空欄か 0 のままで構いません。',
-  reassure: '入力金額は月額の目安で構いません。あとから変更して再計算できます。',
-  totalLabel: '現在の毎月生活費の合計',
-  totalHelp:
-    '住宅ローン返済額や大学費用などの大きな教育費を除いた、毎月の日常生活費のおおよその合計です。分からなければ、内訳を入力すると目安になります。',
+  lead: 'カテゴリごとに、分かる範囲で入力してください。毎月の生活費の合計は自動で計算されます。',
+  reassure: '入力金額は月額の目安で構いません。未入力の項目は空欄か 0 のままで大丈夫です。あとから変更して再計算できます。',
   // 生活費合計の定義（フィードバック §1）
   totalDefinitionNote:
     'ここで入力する生活費は、住宅ローン返済額や大学費用などの大きな教育費を除いた、日常生活費の目安です。通信費・保険料・車関連費・日常的な子ども関連費は含めてかまいません。',
-  breakdownHeading: '内訳（分かる範囲で）',
+  breakdownHeading: 'カテゴリ別の入力',
+  // ライブ合計サマリー
+  liveMonthly: '毎月の生活費（合計）',
+  liveAnnual: '年間の生活費',
   // 二重計上の注記（スペック §5）
   mortgageNote:
     '住宅ローン返済額は、住宅ローンシミュレーターや総合版で別に扱う想定です。ここでは、日常生活費の見直しを中心に確認します。',
@@ -72,29 +72,33 @@ export const INPUT = {
   unit: '円',
   toResult: '結果を見る',
   back: '戻る',
-  // 内訳合計が生活費合計を上回ったときのソフトな注意（フィードバック §2）
-  overBudgetNotice:
-    '入力された内訳合計が、毎月生活費の合計を上回っています。どちらかの金額に入力漏れや重複がないか確認してください。',
+  // 総合版から渡された参考値との差（フィードバック §6）。止めずにやさしい注意のみ。
+  referenceLabel: '総合版で入力されていた生活費',
+  breakdownLabel: '今回の内訳合計',
+  referenceDiffNotice:
+    '総合版の生活費と今回の内訳合計に差があります。入力していない支出がないか確認してください。',
 };
 
 export const RESULT = {
   heading: '結果',
   monthlyTotal: '毎月の生活費',
   annualTotal: '年間の生活費',
-  breakdownTotal: '内訳入力済み',
-  uncategorized: '未分類支出',
-  uncategorizedNote:
-    '内訳の合計と毎月生活費の差額です。まだ入力していない支出が含まれている可能性があります。',
+  monthlyNote: 'カテゴリ内訳の合計から自動計算しています。',
   fixedTotal: '固定費',
   variableTotal: '変動費',
+  fixedVariableHeading: '固定費と変動費の割合',
   fixedVariableNote:
     '固定費・変動費の分類は、生活設計上の目安です。実際には家庭ごとに異なる場合があります。',
   breakdownHeading: '支出の内訳',
-  overBudgetNotice:
-    '入力された内訳合計が、毎月生活費の合計を上回っています。どちらかの金額に入力漏れや重複がないか確認してください。',
-  topHeading: '見直し余地がありそうなカテゴリ',
+  // 参考値との差（フィードバック §6）
+  referenceLabel: '総合版で入力されていた生活費',
+  breakdownLabel: '今回の内訳合計',
+  referenceDiffNotice:
+    '総合版の生活費と今回の内訳合計に差があります。入力していない支出がないか確認してください。',
+  // 見出しは中立な表現に（フィードバック §5）
+  topHeading: '金額が大きいカテゴリ',
   topNote:
-    'これは支出額の大きさに基づく参考表示です。特定の支出削減や保険解約などを推奨するものではありません。',
+    '金額の大きい順に並べた参考表示です。特定の支出の削減や見直しを勧めるものではありません。',
   // QuickAdjust（生活費を少し動かして見る）
   adjustHeading: '生活費を少し動かして見る',
   adjustLead: '毎月の生活費を少し下げると、年間ではどのくらい変わるかを確認できます。',
@@ -113,13 +117,11 @@ export const RESULT = {
   effectHeading: '月1万円・3万円・5万円下げた場合の効果',
   effectMonthlyLabel: '毎月',
   effectAnnualLabel: '年間',
-  // 反映ボタン（フィードバック §4：現在と改善後を混同しない）
-  reflectCurrentBtn: 'この生活費を生活設計に反映する',
-  reflectAdjustedBtn: '改善後の生活費を生活設計に反映する',
-  reflectBreakdownBtn: '内訳合計を生活費として反映する',
-  reflectedCurrent: '現在の生活費を生活設計に反映しました。',
+  // 反映ボタン（フィードバック §4：反映対象と金額を明示）
+  reflectBreakdownBtn: (amount: string) => `内訳合計 ${amount} を生活設計に反映する`,
+  reflectAdjustedBtn: (amount: string) => `改善後の生活費 ${amount} を生活設計に反映する`,
+  reflectedBreakdown: '内訳合計の生活費を生活設計に反映しました。',
   reflectedAdjusted: '改善後の生活費を生活設計に反映しました。',
-  reflectedBreakdown: '内訳合計を生活費として反映しました。',
   reflectFailed: 'この端末では保存できませんでした。設定をご確認のうえ、もう一度お試しください。',
   toComprehensive: '人生全体の資産推移で見る',
   recalc: '条件を変えて再計算',
@@ -130,7 +132,7 @@ export const RESULT = {
     '家計簿のように1円単位で管理するものではありません。',
     '入力金額は月額の目安で構いません。',
     '住宅ローンや大きな教育費は、別シミュレーターや総合版で扱う想定です。',
-    '表示される見直しポイントは、支出額の大きさに基づく参考表示です。',
+    '表示される金額が大きいカテゴリは、支出額の大きさに基づく参考表示です。',
     '特定の支出削減や保険解約などを推奨するものではありません。',
   ],
   disclaimerHeading: 'このシミュレーションについて',

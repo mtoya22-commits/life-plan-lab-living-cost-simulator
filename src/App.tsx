@@ -1,6 +1,6 @@
 import { useMemo, useState } from 'react';
 import type { CategoryAmounts, LivingCostInput } from './types/livingCost';
-import { calcResult } from './lib/calc';
+import { calcResult, sanitizeAmount } from './lib/calc';
 import { CATEGORY_KEYS } from './lib/classification';
 import IntroScreen from './features/intro/IntroScreen';
 import InputScreen from './features/input/InputScreen';
@@ -15,12 +15,24 @@ function emptyCategories(): CategoryAmounts {
   }, {} as CategoryAmounts);
 }
 
+// 総合版からのリンクで現在の生活費が渡される将来フック（円/月）。例: ?ref=250000
+function readReferenceMonthly(): number | undefined {
+  if (typeof window === 'undefined') return undefined;
+  const raw = new URLSearchParams(window.location.search).get('ref');
+  if (!raw) return undefined;
+  const num = Number(raw);
+  return Number.isFinite(num) && num > 0 ? sanitizeAmount(num) : undefined;
+}
+
 export default function App() {
   const [phase, setPhase] = useState<Phase>('intro');
-  const [input, setInput] = useState<LivingCostInput>({
-    monthlyTotal: 0,
-    categories: emptyCategories(),
-  });
+  const [referenceMonthlyTotal] = useState<number | undefined>(readReferenceMonthly);
+  const [categories, setCategories] = useState<CategoryAmounts>(emptyCategories);
+
+  const input: LivingCostInput = useMemo(
+    () => ({ categories, referenceMonthlyTotal }),
+    [categories, referenceMonthlyTotal],
+  );
 
   // 入力が変わるたびに結果を再計算（純粋関数）。
   const result = useMemo(() => calcResult(input), [input]);
@@ -31,20 +43,16 @@ export default function App() {
 
       {phase === 'input' && (
         <InputScreen
-          input={input}
+          categories={categories}
           result={result}
-          onChange={setInput}
+          onChange={setCategories}
           onBack={() => setPhase('intro')}
           onSubmit={() => setPhase('result')}
         />
       )}
 
       {phase === 'result' && (
-        <ResultScreen
-          input={input}
-          result={result}
-          onRecalc={() => setPhase('input')}
-        />
+        <ResultScreen input={input} result={result} onRecalc={() => setPhase('input')} />
       )}
     </div>
   );

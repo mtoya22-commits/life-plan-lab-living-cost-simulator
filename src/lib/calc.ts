@@ -58,12 +58,15 @@ export function adjustedMonthly(monthlyTotal: number, reduction: number): number
   return Math.max(0, base - r);
 }
 
-/** 計算結果一式を生成する純粋関数。 */
+/**
+ * 計算結果一式を生成する純粋関数。
+ * 毎月生活費の総額は内訳合計から自動計算する（monthlyTotal = breakdownTotal）。
+ * 割合の分母も内訳合計に統一し、単位不整合や 100% 超を防ぐ。
+ */
 export function calcResult(
   input: LivingCostInput,
   topCount = 3,
 ): LivingCostResult {
-  const monthlyTotal = sanitizeAmount(input.monthlyTotal);
   const categories = sanitizeCategories(input.categories);
   const breakdownTotal = sumBreakdown(categories);
 
@@ -77,7 +80,7 @@ export function calcResult(
     return {
       key,
       amount,
-      ratio: monthlyTotal > 0 ? amount / monthlyTotal : 0,
+      ratio: breakdownTotal > 0 ? amount / breakdownTotal : 0,
       costType,
     };
   });
@@ -87,16 +90,24 @@ export function calcResult(
     .sort((a, b) => b.amount - a.amount)
     .slice(0, topCount);
 
+  const referenceMonthlyTotal =
+    input.referenceMonthlyTotal != null
+      ? sanitizeAmount(input.referenceMonthlyTotal)
+      : undefined;
+
   return {
-    monthlyTotal,
-    annualTotal: monthlyTotal * MONTHS_PER_YEAR,
+    monthlyTotal: breakdownTotal,
+    annualTotal: breakdownTotal * MONTHS_PER_YEAR,
     breakdownTotal,
-    uncategorized: Math.max(0, monthlyTotal - breakdownTotal),
-    isOverBudget: breakdownTotal > monthlyTotal,
     fixedTotal,
     variableTotal,
+    fixedRatio: breakdownTotal > 0 ? fixedTotal / breakdownTotal : 0,
+    variableRatio: breakdownTotal > 0 ? variableTotal / breakdownTotal : 0,
     shares,
     topCategories,
+    referenceMonthlyTotal,
+    referenceDiff:
+      referenceMonthlyTotal != null ? referenceMonthlyTotal - breakdownTotal : undefined,
   };
 }
 
@@ -104,20 +115,17 @@ export function calcResult(
 export function resolveSelectedMonthly(
   source: SelectedMonthlySource,
   values: {
-    monthlyTotal: number;
     adjustedMonthlyTotal?: number;
     breakdownTotal: number;
   },
 ): number {
   switch (source) {
     case 'adjustedMonthlyTotal':
-      // 改善値が無ければ現在の生活費にフォールバック。
-      return sanitizeAmount(values.adjustedMonthlyTotal ?? values.monthlyTotal);
+      // 改善値が無ければ内訳合計にフォールバック。
+      return sanitizeAmount(values.adjustedMonthlyTotal ?? values.breakdownTotal);
     case 'breakdownTotal':
-      return sanitizeAmount(values.breakdownTotal);
-    case 'monthlyTotal':
     default:
-      return sanitizeAmount(values.monthlyTotal);
+      return sanitizeAmount(values.breakdownTotal);
   }
 }
 
@@ -139,7 +147,6 @@ export function buildStoragePayload(params: {
       : undefined;
 
   const selectedMonthlyTotal = resolveSelectedMonthly(selectedSource, {
-    monthlyTotal: result.monthlyTotal,
     adjustedMonthlyTotal,
     breakdownTotal: result.breakdownTotal,
   });
@@ -149,7 +156,8 @@ export function buildStoragePayload(params: {
     source: 'living-cost-simulator',
     savedAt: params.savedAt ?? new Date().toISOString(),
     livingCost: {
-      monthlyTotal: result.monthlyTotal,
+      // monthlyTotal は内訳合計（＝毎月生活費の総額）を保存する。
+      monthlyTotal: result.breakdownTotal,
       ...(adjustedMonthlyTotal != null ? { adjustedMonthlyTotal } : {}),
       selectedMonthlyTotal,
       selectedMonthlySource: selectedSource,
@@ -157,7 +165,6 @@ export function buildStoragePayload(params: {
       breakdownTotal: result.breakdownTotal,
       fixedCostTotal: result.fixedTotal,
       variableCostTotal: result.variableTotal,
-      uncategorizedAmount: result.uncategorized,
       categories: sanitizeCategories(categories),
     },
   };

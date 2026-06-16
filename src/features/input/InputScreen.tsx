@@ -1,22 +1,25 @@
-import type { CategoryKey, LivingCostInput, LivingCostResult } from '../../types/livingCost';
+import type { CategoryAmounts, CategoryKey, LivingCostResult } from '../../types/livingCost';
 import { CATEGORY_KEYS } from '../../lib/classification';
-import { formatYen } from '../../lib/format';
+import { formatManYen, formatMonthlyYen } from '../../lib/format';
 import { CATEGORY_HELP, CATEGORY_LABELS, INPUT } from '../../strings/ja';
 import QuestionCard from './QuestionCard';
 import NumberField from './NumberField';
 
 interface Props {
-  input: LivingCostInput;
+  categories: CategoryAmounts;
   result: LivingCostResult;
-  onChange: (input: LivingCostInput) => void;
+  onChange: (categories: CategoryAmounts) => void;
   onBack: () => void;
   onSubmit: () => void;
 }
 
-export default function InputScreen({ input, result, onChange, onBack, onSubmit }: Props) {
-  const setMonthlyTotal = (value: number) => onChange({ ...input, monthlyTotal: value });
+export default function InputScreen({ categories, result, onChange, onBack, onSubmit }: Props) {
   const setCategory = (key: CategoryKey, value: number) =>
-    onChange({ ...input, categories: { ...input.categories, [key]: value } });
+    onChange({ ...categories, [key]: value });
+
+  // 参考値との差が一定以上あればやさしい注意を出す（止めない）。1万円以上を目安に。
+  const showReferenceDiff =
+    result.referenceDiff != null && Math.abs(result.referenceDiff) >= 10000;
 
   return (
     <div className="step-layout">
@@ -28,15 +31,25 @@ export default function InputScreen({ input, result, onChange, onBack, onSubmit 
 
         <p className="reassure">{INPUT.reassure}</p>
 
-        <QuestionCard title={INPUT.totalLabel} help={INPUT.totalHelp}>
-          <NumberField
-            value={input.monthlyTotal}
-            onChange={setMonthlyTotal}
-            unit={INPUT.unit}
-            ariaLabel={INPUT.totalLabel}
-          />
-          <p className="muted field-note">{INPUT.totalDefinitionNote}</p>
-        </QuestionCard>
+        <p className="muted note-block">{INPUT.totalDefinitionNote}</p>
+
+        {result.referenceMonthlyTotal != null && (
+          <div className="card reference">
+            <div className="reference__row">
+              <span className="muted">{INPUT.referenceLabel}</span>
+              <span>{formatMonthlyYen(result.referenceMonthlyTotal)}</span>
+            </div>
+            <div className="reference__row">
+              <span className="muted">{INPUT.breakdownLabel}</span>
+              <span>{formatMonthlyYen(result.breakdownTotal)}</span>
+            </div>
+            {showReferenceDiff && (
+              <p className="notice" role="status">
+                {INPUT.referenceDiffNotice}
+              </p>
+            )}
+          </div>
+        )}
 
         <details className="collapsible collapsible--muted">
           <summary>住宅ローン・教育費の扱い</summary>
@@ -50,7 +63,7 @@ export default function InputScreen({ input, result, onChange, onBack, onSubmit 
         {CATEGORY_KEYS.map((key) => (
           <QuestionCard key={key} title={CATEGORY_LABELS[key]} help={CATEGORY_HELP[key]}>
             <NumberField
-              value={input.categories[key]}
+              value={categories[key]}
               onChange={(v) => setCategory(key, v)}
               unit={INPUT.unit}
               ariaLabel={CATEGORY_LABELS[key]}
@@ -58,15 +71,17 @@ export default function InputScreen({ input, result, onChange, onBack, onSubmit 
           </QuestionCard>
         ))}
 
-        {result.isOverBudget && (
-          <p className="notice" role="status">
-            {INPUT.overBudgetNotice}
-          </p>
-        )}
-
-        <p className="muted field-note">
-          内訳の合計：{formatYen(result.breakdownTotal)}
-        </p>
+        {/* 内訳合計から自動計算した毎月/年間の生活費 */}
+        <div className="card live-total">
+          <div className="live-total__row">
+            <span className="muted">{INPUT.liveMonthly}</span>
+            <strong className="live-total__value">{formatMonthlyYen(result.monthlyTotal)}</strong>
+          </div>
+          <div className="live-total__row">
+            <span className="muted">{INPUT.liveAnnual}</span>
+            <span>{formatManYen(result.annualTotal)}</span>
+          </div>
+        </div>
       </div>
 
       <div className="bottom-nav">
