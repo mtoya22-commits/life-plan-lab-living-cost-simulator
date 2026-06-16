@@ -387,3 +387,82 @@
 .reflect__link {
   margin-top: 10px;
 }
+
+/* 参考値（総合版から渡された生活費との比較） */
+.reference__row {
+  display: flex;
+  justify-content: space-between;
+  gap: 10px;
+  font-size: 0.9rem;
+  padding: 4px 0;
+}
+.reference .notice {
+  margin-top: 8px;
+}
+
+/* 入力画面のライブ合計サマリー */
+.live-total {
+  background: var(--accent-soft);
+  border-color: var(--accent-soft);
+}
+.live-total__row {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: 10px;
+  padding: 3px 0;
+}
+.live-total__value {
+  font-size: 1.2rem;
+  color: var(--accent-strong);
+}
+
+/* 固定費/変動費ドーナツ */
+.donut {
+  display: flex;
+  align-items: center;
+  gap: 18px;
+  flex-wrap: wrap;
+  margin-top: 8px;
+}
+.donut__svg {
+  flex: 0 0 auto;
+}
+.donut__legend {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  flex: 1 1 160px;
+  min-width: 160px;
+}
+.donut__legend li {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 0;
+}
+.donut__swatch {
+  flex: 0 0 auto;
+  width: 12px;
+  height: 12px;
+  border-radius: 3px;
+}
+.donut__swatch--fixed {
+  background: var(--band-realistic);
+}
+.donut__swatch--variable {
+  background: var(--band-stable);
+}
+.donut__legend-label {
+  font-size: 0.88rem;
+}
+.donut__legend-value {
+  margin-left: auto;
+  font-weight: 600;
+  font-size: 0.9rem;
+  white-space: nowrap;
+}
+.donut__legend-value .muted {
+  font-weight: 400;
+  font-size: 0.78rem;
+}

@@ -21,10 +21,14 @@ export type CategoryAmounts = Record<CategoryKey, number>;
 /** 固定費 / 変動費のざっくり分類（生活設計上の目安）。 */
 export type CostType = 'fixed' | 'variable';
 
-/** 入力状態。monthlyTotal は「現在の毎月生活費の合計（日常生活費の目安）」。 */
+/**
+ * 入力状態。毎月生活費の総額はカテゴリ内訳の合計から自動計算するため、
+ * ユーザーが総額を直接入力することはない（家計簿化を避け、整合性管理をさせない方針）。
+ * referenceMonthlyTotal は、総合版から渡された「現在の生活費（円/月）」の参考値（任意）。
+ */
 export interface LivingCostInput {
-  monthlyTotal: number;
   categories: CategoryAmounts;
+  referenceMonthlyTotal?: number;
 }
 
 /** カテゴリ別の金額と割合。 */
@@ -48,27 +52,30 @@ export interface ImprovementEffect {
 
 /** 計算結果。Hero・グラフ・保存処理が同じ結果を参照する。 */
 export interface LivingCostResult {
+  /** 毎月生活費の総額。内訳合計と同値（自動計算）。 */
   monthlyTotal: number;
   annualTotal: number;
   breakdownTotal: number;
-  uncategorized: number;
-  /** 内訳合計が生活費合計を上回っているか（やさしい注意表示に使う）。 */
-  isOverBudget: boolean;
   fixedTotal: number;
   variableTotal: number;
+  /** 内訳合計を分母にした固定費 / 変動費の割合（0〜1）。内訳が 0 なら 0。 */
+  fixedRatio: number;
+  variableRatio: number;
   shares: CategoryShare[];
   /** 金額の大きい上位カテゴリ（0 円は除外。最大件数は呼び出し側で指定）。 */
   topCategories: CategoryShare[];
+  /** 総合版から渡された参考値（円/月）。無ければ undefined。 */
+  referenceMonthlyTotal?: number;
+  /** 参考値 − 内訳合計。参考値が無ければ undefined。 */
+  referenceDiff?: number;
 }
 
 /** 総合版へ反映する生活費がどの値かを示す。 */
-export type SelectedMonthlySource =
-  | 'monthlyTotal'
-  | 'adjustedMonthlyTotal'
-  | 'breakdownTotal';
+export type SelectedMonthlySource = 'breakdownTotal' | 'adjustedMonthlyTotal';
 
 /** localStorage に保存する生活費データ本体。 */
 export interface StoredLivingCost {
+  /** 内訳合計（＝毎月生活費の総額）。 */
   monthlyTotal: number;
   adjustedMonthlyTotal?: number;
   selectedMonthlyTotal: number;
@@ -77,7 +84,6 @@ export interface StoredLivingCost {
   breakdownTotal: number;
   fixedCostTotal: number;
   variableCostTotal: number;
-  uncategorizedAmount: number;
   categories: CategoryAmounts;
 }
 
