@@ -591,19 +591,12 @@
   color: var(--accent-strong);
 }
 .composition-item__shares {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 4px 14px;
   margin: 4px 0;
   font-size: 0.88rem;
 }
 .composition-item__message {
   margin: 4px 0 0;
   font-size: 0.86rem;
-}
-.composition-item__food {
-  margin: 4px 0 0;
-  font-size: 0.76rem;
 }
 
 /* 世帯人数別の参考比較カード */

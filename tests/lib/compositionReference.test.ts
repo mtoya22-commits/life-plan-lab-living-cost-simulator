@@ -97,20 +97,6 @@ describe('buildCompositionComparison — 構成比と balanceIndex', () => {
   });
 });
 
-describe('buildCompositionComparison — 食費=1比のガード', () => {
-  it('食費が30,000円未満なら userFoodRatio を付けない', () => {
-    const r = comp({ food: 20000, communication: 20000 });
-    const comm = r.items.find((i) => i.categoryKey === 'communication')!;
-    expect(comm.userFoodRatio).toBeUndefined();
-  });
-
-  it('食費が30,000円以上なら userFoodRatio を付ける', () => {
-    const r = comp({ food: 50000, communication: 20000 });
-    const comm = r.items.find((i) => i.categoryKey === 'communication')!;
-    expect(comm.userFoodRatio).toBeCloseTo(20000 / 50000, 6);
-  });
-});
-
 describe('buildCompositionComparison — highlightedItems', () => {
   it('higher / muchHigher のみを最大3件返す', () => {
     const r = comp({

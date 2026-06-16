@@ -29,9 +29,6 @@ export const COMPARABLE_CATEGORIES = Object.keys(
   REFERENCE_COMPOSITION_2025,
 ) as (keyof typeof REFERENCE_COMPOSITION_2025)[];
 
-/** 食費=1の参考比率を表示する最低ライン（これ未満は歪むので非表示）。 */
-const FOOD_RATIO_MIN = 30000;
-
 /** 比較対象の入力が少なすぎると構成比が極端になるため、強い表示を控える閾値。 */
 const LOW_DATA_TOTAL = 50000;
 const LOW_DATA_MIN_CATEGORIES = 2;
@@ -52,15 +49,13 @@ function userAmountOf(result: LivingCostResult, key: CategoryKey): number {
 
 /**
  * 金額そのものではなく「比較対象カテゴリの中での構成比」で参考比較する純粋関数。
- * メイン判定は balanceIndex（構成比の比）。食費=1の比は補助として付ける。
+ * メイン判定は balanceIndex（構成比の比）。
  */
 export function buildCompositionComparison(result: LivingCostResult): CompositionComparisonResult {
   const referenceComparableTotal = COMPARABLE_CATEGORIES.reduce(
     (sum, key) => sum + REFERENCE_COMPOSITION_2025[key].monthlyAmount,
     0,
   );
-  const userFood = userAmountOf(result, 'food');
-  const referenceFood = REFERENCE_COMPOSITION_2025.food.monthlyAmount;
 
   // 比較対象は「入力済み（>0）」のカテゴリのみ。
   const present = COMPARABLE_CATEGORIES.filter((key) => userAmountOf(result, key) > 0);
@@ -80,8 +75,6 @@ export function buildCompositionComparison(result: LivingCostResult): Compositio
     const referenceShare = ref.monthlyAmount / referenceComparableTotal;
     const balanceIndex = referenceShare > 0 ? userShare / referenceShare : 0;
     const level = levelFromIndex(balanceIndex);
-    // 食費が小さすぎると食費=1比が歪むため、その場合は付けない。食費自身も補助比は付けない。
-    const showFoodRatio = key !== 'food' && userFood >= FOOD_RATIO_MIN;
     // 医療費・子ども関連費が上位のときは、削減候補に見せない見込み文脈にする。
     const careful = (CAREFUL_KEYS as readonly string[]).includes(key);
     const useCareful = careful && (level === 'higher' || level === 'muchHigher');
@@ -92,9 +85,6 @@ export function buildCompositionComparison(result: LivingCostResult): Compositio
       userShare,
       referenceShare,
       balanceIndex,
-      ...(showFoodRatio
-        ? { userFoodRatio: userMonthly / userFood, referenceFoodRatio: ref.monthlyAmount / referenceFood }
-        : {}),
       level,
       message: useCareful
         ? COMPOSITION.carefulMessages[key as 'medical' | 'children']

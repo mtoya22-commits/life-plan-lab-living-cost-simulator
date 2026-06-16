@@ -284,11 +284,6 @@ export const COMPOSITION = {
   // 生活費全体ではなく比較対象カテゴリ内の比率であることが伝わるラベル。
   yourShare: '比較対象カテゴリ内の比率',
   referenceShare: '参考構成比',
-  you: 'あなた',
-  reference: '参考',
-  // 食費=1の補助表示（控えめ）。
-  foodRatioNote: (you: string, ref: string) =>
-    `食費を1とすると、この項目は${you}。参考値では${ref}です。`,
   // balanceIndex の度合いに応じたやわらかい文言。
   levels: {
     muchHigher: '一般的な支出構成と比べると、比率が大きめです。',
