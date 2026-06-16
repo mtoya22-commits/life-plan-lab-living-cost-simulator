@@ -170,8 +170,10 @@ export interface CompositionComparisonResult {
   comparableTotal: number;
   referenceComparableTotal: number;
   items: CompositionComparisonItem[];
-  /** higher / muchHigher のみ（最大3件）。 */
+  /** higher / muchHigher のみ（最大3件）。lowData のときは空。 */
   highlightedItems: CompositionComparisonItem[];
+  /** 比較対象の入力が少なすぎて、強い比較表示を控えるべきか。 */
+  lowData: boolean;
 }
 
 /** localStorage に保存する生活費データ本体。 */

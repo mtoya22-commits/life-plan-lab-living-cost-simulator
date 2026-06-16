@@ -2,7 +2,7 @@ import type { CompositionComparisonItem, CompositionComparisonResult } from '../
 import { formatPercent } from '../../lib/format';
 import { COMPOSITION } from '../../strings/ja';
 
-// 支出バランスの参考比較カード。金額の高低ではなく、生活費の中での構成比を見る。
+// 支出バランスの参考比較カード。生活費全体ではなく、比較対象カテゴリの中での構成比を見る。
 // 良し悪し判定ではなく「どこを確認するとよいか」のきっかけ。赤・警告色は使わない。
 function ItemRow({ item }: { item: CompositionComparisonItem }) {
   return (
@@ -21,8 +21,7 @@ function ItemRow({ item }: { item: CompositionComparisonItem }) {
       <p className="composition-item__message">{item.message}</p>
       {item.userFoodRatio != null && item.referenceFoodRatio != null && (
         <p className="muted composition-item__food">
-          {COMPOSITION.foodEqualsOne}：{COMPOSITION.you} {item.userFoodRatio.toFixed(2)} / {COMPOSITION.reference}{' '}
-          {item.referenceFoodRatio.toFixed(2)}
+          {COMPOSITION.foodRatioNote(item.userFoodRatio.toFixed(2), item.referenceFoodRatio.toFixed(2))}
         </p>
       )}
     </li>
@@ -30,7 +29,7 @@ function ItemRow({ item }: { item: CompositionComparisonItem }) {
 }
 
 export default function CompositionReference({ data }: { data: CompositionComparisonResult }) {
-  const { items, highlightedItems } = data;
+  const { items, highlightedItems, lowData } = data;
   const others = items.filter((i) => !highlightedItems.includes(i));
 
   return (
@@ -44,7 +43,9 @@ export default function CompositionReference({ data }: { data: CompositionCompar
         <p className="muted">{COMPOSITION.noData}</p>
       ) : (
         <>
-          {highlightedItems.length > 0 ? (
+          {lowData ? (
+            <p className="muted">{COMPOSITION.lowDataNote}</p>
+          ) : highlightedItems.length > 0 ? (
             <ul className="composition-list">
               {highlightedItems.map((item) => (
                 <ItemRow key={item.categoryKey} item={item} />
@@ -66,6 +67,8 @@ export default function CompositionReference({ data }: { data: CompositionCompar
               </div>
             </details>
           )}
+
+          <p className="muted field-note composition__link">{COMPOSITION.scenarioLink}</p>
         </>
       )}
 

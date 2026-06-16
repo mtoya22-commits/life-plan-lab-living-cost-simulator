@@ -32,6 +32,13 @@ export const COMPARABLE_CATEGORIES = Object.keys(
 /** 食費=1の参考比率を表示する最低ライン（これ未満は歪むので非表示）。 */
 const FOOD_RATIO_MIN = 30000;
 
+/** 比較対象の入力が少なすぎると構成比が極端になるため、強い表示を控える閾値。 */
+const LOW_DATA_TOTAL = 50000;
+const LOW_DATA_MIN_CATEGORIES = 2;
+
+/** 慎重に扱うカテゴリ（上位に出ても削減候補に見せない）。 */
+const CAREFUL_KEYS = ['medical', 'children'] as const;
+
 function levelFromIndex(balanceIndex: number): CompositionLevel {
   if (balanceIndex >= 1.5) return 'muchHigher';
   if (balanceIndex >= 1.2) return 'higher';
@@ -60,8 +67,11 @@ export function buildCompositionComparison(result: LivingCostResult): Compositio
   const comparableTotal = present.reduce((sum, key) => sum + userAmountOf(result, key), 0);
 
   if (comparableTotal === 0) {
-    return { comparableTotal: 0, referenceComparableTotal, items: [], highlightedItems: [] };
+    return { comparableTotal: 0, referenceComparableTotal, items: [], highlightedItems: [], lowData: true };
   }
+
+  // 比較対象の入力が少なすぎる場合は、強い比較表示を控える。
+  const lowData = comparableTotal < LOW_DATA_TOTAL || present.length < LOW_DATA_MIN_CATEGORIES;
 
   const items: CompositionComparisonItem[] = present.map((key) => {
     const ref = REFERENCE_COMPOSITION_2025[key];
@@ -72,6 +82,9 @@ export function buildCompositionComparison(result: LivingCostResult): Compositio
     const level = levelFromIndex(balanceIndex);
     // 食費が小さすぎると食費=1比が歪むため、その場合は付けない。食費自身も補助比は付けない。
     const showFoodRatio = key !== 'food' && userFood >= FOOD_RATIO_MIN;
+    // 医療費・子ども関連費が上位のときは、削減候補に見せない見込み文脈にする。
+    const careful = (CAREFUL_KEYS as readonly string[]).includes(key);
+    const useCareful = careful && (level === 'higher' || level === 'muchHigher');
     return {
       categoryKey: key,
       label: ref.label,
@@ -83,14 +96,19 @@ export function buildCompositionComparison(result: LivingCostResult): Compositio
         ? { userFoodRatio: userMonthly / userFood, referenceFoodRatio: ref.monthlyAmount / referenceFood }
         : {}),
       level,
-      message: COMPOSITION.levels[level],
+      message: useCareful
+        ? COMPOSITION.carefulMessages[key as 'medical' | 'children']
+        : COMPOSITION.levels[level],
     };
   });
 
-  const highlightedItems = items
-    .filter((i) => i.level === 'higher' || i.level === 'muchHigher')
-    .sort((a, b) => b.balanceIndex - a.balanceIndex)
-    .slice(0, 3);
+  // 入力が少なすぎるときは強調を出さない。
+  const highlightedItems = lowData
+    ? []
+    : items
+        .filter((i) => i.level === 'higher' || i.level === 'muchHigher')
+        .sort((a, b) => b.balanceIndex - a.balanceIndex)
+        .slice(0, 3);
 
-  return { comparableTotal, referenceComparableTotal, items, highlightedItems };
+  return { comparableTotal, referenceComparableTotal, items, highlightedItems, lowData };
 }

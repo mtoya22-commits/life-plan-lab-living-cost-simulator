@@ -13,6 +13,9 @@ export default function HouseholdComparison({ data }: { data: HouseholdCompariso
     <details className="collapsible collapsible--muted">
       <summary>{COMPARISON.heading}</summary>
       <div className="collapsible__body">
+        <p className="muted field-note" style={{ marginTop: 0 }}>
+          {COMPARISON.intro}
+        </p>
         <ul className="compare-list">
           <li className="compare-list__row">
             <span className="muted">{COMPARISON.actualLabel}</span>

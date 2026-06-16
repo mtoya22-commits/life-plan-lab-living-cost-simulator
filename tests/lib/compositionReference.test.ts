@@ -4,7 +4,7 @@ import {
   REFERENCE_COMPOSITION_2025,
   buildCompositionComparison,
 } from '../../src/lib/compositionReference';
-import { COMPOSITION } from '../../src/strings/ja';
+import { COMPARISON, COMPOSITION } from '../../src/strings/ja';
 import type { CategoryAmounts, LivingCostInput } from '../../src/types/livingCost';
 
 const emptyCategories: CategoryAmounts = {
@@ -122,6 +122,75 @@ describe('buildCompositionComparison — highlightedItems', () => {
     });
     expect(r.highlightedItems).toHaveLength(3);
     expect(r.highlightedItems.every((i) => i.level === 'higher' || i.level === 'muchHigher')).toBe(true);
+  });
+});
+
+describe('buildCompositionComparison — 低データガード', () => {
+  it('comparableTotal が 50,000円未満なら lowData かつ highlighted 空', () => {
+    const r = comp({ food: 20000, communication: 10000 });
+    expect(r.comparableTotal).toBeLessThan(50000);
+    expect(r.lowData).toBe(true);
+    expect(r.highlightedItems).toHaveLength(0);
+  });
+
+  it('比較対象の入力が1カテゴリだけなら lowData かつ highlighted 空', () => {
+    const r = comp({ food: 200000 });
+    expect(r.items).toHaveLength(1);
+    expect(r.lowData).toBe(true);
+    expect(r.highlightedItems).toHaveLength(0);
+  });
+
+  it('十分な入力があれば lowData は false', () => {
+    const r = comp({ food: 100000, communication: 100000 });
+    expect(r.lowData).toBe(false);
+  });
+});
+
+describe('医療費・子ども関連費の highlighted 文言', () => {
+  const careful = /減らす|削る|見直しが必要|高すぎ|負担が重い/;
+
+  it('医療費が上位でも削減を促さない見込み文脈になる', () => {
+    const r = comp({ food: 40000, medical: 80000, leisure: 40000 });
+    const medical = r.highlightedItems.find((i) => i.categoryKey === 'medical');
+    expect(medical).toBeDefined();
+    expect(medical!.message).toMatch(/見込んで/);
+    expect(medical!.message).not.toMatch(careful);
+  });
+
+  it('子ども関連費が上位でも削減を促さない見込み文脈になる', () => {
+    const r = comp({ food: 40000, children: 80000, leisure: 40000 });
+    const children = r.highlightedItems.find((i) => i.categoryKey === 'children');
+    expect(children).toBeDefined();
+    expect(children!.message).toMatch(/見込んで/);
+    expect(children!.message).not.toMatch(careful);
+  });
+});
+
+describe('ラベル・注記・役割分担', () => {
+  it('比率ラベルは「比較対象カテゴリ内の比率」（「あなたの比率」ではない）', () => {
+    expect(COMPOSITION.yourShare).toBe('比較対象カテゴリ内の比率');
+    expect(COMPOSITION.yourShare).not.toBe('あなたの比率');
+  });
+
+  it('注記に比較対象カテゴリ内の構成比・除外の趣旨を含む', () => {
+    expect(COMPOSITION.note).toContain('比較対象カテゴリ内の構成比');
+    expect(COMPOSITION.note).toContain('除外');
+    expect(COMPOSITION.note).toMatch(/保険料・サブスク・その他/);
+  });
+
+  it('intro に除外カテゴリと比率の趣旨を含む', () => {
+    expect(COMPOSITION.intro).toMatch(/保険料・サブスク・その他/);
+    expect(COMPOSITION.intro).toContain('比率');
+  });
+
+  it('支出バランス比較（比率）と世帯人数別目安（金額感）の役割が文言上区別される', () => {
+    expect(COMPOSITION.intro).toContain('比率');
+    expect(COMPARISON.intro).toContain('金額感');
+    expect(COMPOSITION.intro).not.toBe(COMPARISON.intro);
+  });
+
+  it('カテゴリ別シナリオへの接続文を持つ', () => {
+    expect(COMPOSITION.scenarioLink).toContain('気になる項目を動かしてみる');
   });
 });
 
