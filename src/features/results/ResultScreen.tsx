@@ -4,7 +4,7 @@ import type {
   LivingCostResult,
   SelectedMonthlySource,
 } from '../../types/livingCost';
-import { adjustedMonthly, buildStoragePayload, improvementEffect } from '../../lib/calc';
+import { adjustedMonthly, buildStoragePayload } from '../../lib/calc';
 import { saveLivingCost } from '../../lib/storage';
 import { formatManYen, formatMonthlyYen, formatYen } from '../../lib/format';
 import { CATEGORY_LABELS, COMPREHENSIVE_URL_PLACEHOLDER, INPUT, RESULT } from '../../strings/ja';
@@ -19,8 +19,6 @@ interface Props {
   result: LivingCostResult;
   onRecalc: () => void;
 }
-
-const REDUCTION_STEPS = [10000, 30000, 50000];
 
 export default function ResultScreen({ input, result, onRecalc }: Props) {
   // QuickAdjust の試算（試算用の一時変更。入力条件そのものは変えない）。
@@ -95,27 +93,6 @@ export default function ResultScreen({ input, result, onRecalc }: Props) {
         reduction={reduction}
         onReductionChange={setReduction}
       />
-
-      {/* 改善効果テーブル（月1/3/5万円 → 年間効果）。QuickAdjust の直下に置く。 */}
-      <section className="card">
-        <h2 className="section-heading">{RESULT.effectHeading}</h2>
-        <table className="effect-table">
-          <thead>
-            <tr>
-              <th>{RESULT.effectMonthlyLabel}</th>
-              <th>{RESULT.effectAnnualLabel}</th>
-            </tr>
-          </thead>
-          <tbody>
-            {REDUCTION_STEPS.map((step) => (
-              <tr key={step}>
-                <td>{formatManYen(step)}</td>
-                <td>{formatManYen(improvementEffect(step).annual)}</td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      </section>
 
       {/* 固定費 / 変動費の割合（ドーナツ） */}
       <section className="card">

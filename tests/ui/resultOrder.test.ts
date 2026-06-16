@@ -21,10 +21,6 @@ describe('結果画面の表示順', () => {
     expect(household).toBeGreaterThan(source.indexOf('<QuickAdjust'));
   });
 
-  it('世帯比較カードは改善効果テーブルより後ろ', () => {
-    expect(household).toBeGreaterThan(source.indexOf('effect-table'));
-  });
-
   it('世帯比較カードは固定費/変動費ドーナツより後ろ', () => {
     expect(household).toBeGreaterThan(source.indexOf('<FixedVariableDonut'));
   });
