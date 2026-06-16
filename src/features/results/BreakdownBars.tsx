@@ -1,5 +1,6 @@
 import type { CategoryShare } from '../../types/livingCost';
 import { formatPercent, formatYen } from '../../lib/format';
+import { getCostColor } from '../../lib/colors';
 import { CATEGORY_LABELS } from '../../strings/ja';
 
 // スマホで見やすい横棒グラフ（自作・依存なし。申し送り §10「円より横棒」）。
@@ -18,7 +19,7 @@ export default function BreakdownBars({ shares }: { shares: CategoryShare[] }) {
           <div className="bars__head">
             <span className="bars__label">
               {CATEGORY_LABELS[s.key]}
-              <span className={`bars__tag bars__tag--${s.costType}`}>
+              <span className="bars__tag" style={{ background: getCostColor(s.costType) }}>
                 {s.costType === 'fixed' ? '固定費' : '変動費'}
               </span>
             </span>
@@ -29,8 +30,11 @@ export default function BreakdownBars({ shares }: { shares: CategoryShare[] }) {
           </div>
           <div className="bars__track">
             <div
-              className={`bars__fill bars__fill--${s.costType}`}
-              style={{ width: `${max > 0 ? (s.amount / max) * 100 : 0}%` }}
+              className="bars__fill"
+              style={{
+                width: `${max > 0 ? (s.amount / max) * 100 : 0}%`,
+                background: getCostColor(s.costType),
+              }}
             />
           </div>
         </li>

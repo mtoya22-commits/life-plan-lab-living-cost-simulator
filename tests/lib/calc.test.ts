@@ -274,3 +274,45 @@ describe('buildStoragePayload', () => {
     expect(payload.livingCost.selectedMonthlyTotal).toBe(280000);
   });
 });
+
+describe('世帯人数別の参考比較', () => {
+  it('世帯人数 未入力なら householdComparison を作らない', () => {
+    const result = calcResult(sampleInput);
+    expect(result.householdComparison).toBeUndefined();
+  });
+
+  it('世帯人数 入力時は内訳合計ベースで比較結果を作る', () => {
+    const result = calcResult({ ...sampleInput, householdSize: 3 }); // 内訳 310000, 目安 324000
+    const hc = result.householdComparison;
+    expect(hc).toBeDefined();
+    expect(hc?.householdSize).toBe(3);
+    expect(hc?.referenceMonthly).toBe(324000);
+    expect(hc?.actualMonthly).toBe(310000); // 内訳合計ベース
+    expect(hc?.diffMonthly).toBe(310000 - 324000);
+    expect(hc?.level).toBe('near'); // ±10%以内
+  });
+
+  it('保存データに世帯人数が含まれる（入力時）', () => {
+    const result = calcResult({ ...sampleInput, householdSize: 3 });
+    const payload = buildStoragePayload({
+      result,
+      categories: sampleInput.categories,
+      selectedSource: 'breakdownTotal',
+    });
+    expect(payload.livingCost.householdSize).toBe(3);
+    expect(payload.livingCost.householdReferenceMonthly).toBe(324000);
+    expect(payload.livingCost.householdReferenceDiffMonthly).toBe(310000 - 324000);
+  });
+
+  it('世帯人数 未入力なら保存データに含めない', () => {
+    const result = calcResult(sampleInput);
+    const payload = buildStoragePayload({
+      result,
+      categories: sampleInput.categories,
+      selectedSource: 'breakdownTotal',
+    });
+    expect('householdSize' in payload.livingCost).toBe(false);
+    expect('householdReferenceMonthly' in payload.livingCost).toBe(false);
+    expect('householdReferenceDiffMonthly' in payload.livingCost).toBe(false);
+  });
+});

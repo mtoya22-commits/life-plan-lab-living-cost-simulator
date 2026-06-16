@@ -1,4 +1,5 @@
 import { formatPercent, formatYen } from '../../lib/format';
+import { getCostColor } from '../../lib/colors';
 import { RESULT } from '../../strings/ja';
 
 // 固定費 / 変動費の割合をドーナツで表示（自作 SVG・依存追加なし、赤不使用）。
@@ -24,6 +25,8 @@ export default function FixedVariableDonut({
   const total = fixedTotal + variableTotal;
   const fixedLen = C * fixedRatio;
   const variableLen = C * variableRatio;
+  const fixedColor = getCostColor('fixed');
+  const variableColor = getCostColor('variable');
 
   return (
     <div className="donut">
@@ -46,7 +49,7 @@ export default function FixedVariableDonut({
                 cy={SIZE / 2}
                 r={R}
                 fill="none"
-                stroke="var(--band-realistic)"
+                stroke={fixedColor}
                 strokeWidth={STROKE}
                 strokeDasharray={`${fixedLen} ${C - fixedLen}`}
                 strokeDashoffset={0}
@@ -56,7 +59,7 @@ export default function FixedVariableDonut({
                 cy={SIZE / 2}
                 r={R}
                 fill="none"
-                stroke="var(--band-stable)"
+                stroke={variableColor}
                 strokeWidth={STROKE}
                 strokeDasharray={`${variableLen} ${C - variableLen}`}
                 strokeDashoffset={-fixedLen}
@@ -68,7 +71,7 @@ export default function FixedVariableDonut({
 
       <ul className="donut__legend">
         <li>
-          <span className="donut__swatch donut__swatch--fixed" />
+          <span className="donut__swatch" style={{ background: fixedColor }} />
           <span className="donut__legend-label">{RESULT.fixedTotal}</span>
           <span className="donut__legend-value">
             {formatYen(fixedTotal)}
@@ -76,7 +79,7 @@ export default function FixedVariableDonut({
           </span>
         </li>
         <li>
-          <span className="donut__swatch donut__swatch--variable" />
+          <span className="donut__swatch" style={{ background: variableColor }} />
           <span className="donut__legend-label">{RESULT.variableTotal}</span>
           <span className="donut__legend-value">
             {formatYen(variableTotal)}

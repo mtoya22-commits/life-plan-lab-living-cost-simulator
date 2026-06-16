@@ -21,14 +21,38 @@ export type CategoryAmounts = Record<CategoryKey, number>;
 /** 固定費 / 変動費のざっくり分類（生活設計上の目安）。 */
 export type CostType = 'fixed' | 'variable';
 
+/** 世帯人数。5 は「5人以上」を表す。 */
+export type HouseholdSize = 1 | 2 | 3 | 4 | 5;
+
+/** 一般的な支出目安との参考比較の度合い（断定・評価ではなく参考表示）。 */
+export type ComparisonLevel = 'near' | 'slightlyHigh' | 'high' | 'slightlyLow' | 'low';
+
+/** 世帯人数別の一般的な支出目安との参考比較結果。 */
+export interface HouseholdComparison {
+  householdSize: HouseholdSize;
+  /** 世帯人数別の一般的な支出目安（円/月）。 */
+  referenceMonthly: number;
+  /** 今回の生活費（内訳合計ベース・円/月）。 */
+  actualMonthly: number;
+  /** 差額（actual − reference）。 */
+  diffMonthly: number;
+  /** 差額比率（(actual − reference) / reference）。 */
+  diffRatio: number;
+  level: ComparisonLevel;
+  /** やわらかいコメント文言（参考表示）。 */
+  label: string;
+}
+
 /**
  * 入力状態。毎月生活費の総額はカテゴリ内訳の合計から自動計算するため、
  * ユーザーが総額を直接入力することはない（家計簿化を避け、整合性管理をさせない方針）。
  * referenceMonthlyTotal は、総合版から渡された「現在の生活費（円/月）」の参考値（任意）。
+ * householdSize は、一般的な支出目安と比較するための任意入力。
  */
 export interface LivingCostInput {
   categories: CategoryAmounts;
   referenceMonthlyTotal?: number;
+  householdSize?: HouseholdSize;
 }
 
 /** カテゴリ別の金額と割合。 */
@@ -68,6 +92,8 @@ export interface LivingCostResult {
   referenceMonthlyTotal?: number;
   /** 参考値 − 内訳合計。参考値が無ければ undefined。 */
   referenceDiff?: number;
+  /** 世帯人数別の参考比較。householdSize 未入力なら undefined。 */
+  householdComparison?: HouseholdComparison;
 }
 
 /** 総合版へ反映する生活費がどの値かを示す。 */
@@ -84,6 +110,12 @@ export interface StoredLivingCost {
   breakdownTotal: number;
   fixedCostTotal: number;
   variableCostTotal: number;
+  /** 世帯人数（任意入力時のみ）。5 は「5人以上」。 */
+  householdSize?: HouseholdSize;
+  /** 世帯人数別の一般的な支出目安（円/月）。 */
+  householdReferenceMonthly?: number;
+  /** 目安との差額（actual − reference）。 */
+  householdReferenceDiffMonthly?: number;
   categories: CategoryAmounts;
 }
 
