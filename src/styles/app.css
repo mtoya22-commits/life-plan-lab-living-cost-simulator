@@ -473,6 +473,103 @@
   font-size: 0.76rem;
 }
 
+/* カテゴリ別見直しシナリオ */
+.scenario__chips {
+  margin-top: 10px;
+}
+.scenario__chip {
+  flex: 0 0 auto;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  min-width: 0;
+}
+.scenario__chip-amount {
+  font-size: 0.78rem;
+  opacity: 0.85;
+}
+.scenario__badge {
+  font-size: 0.64rem;
+  padding: 1px 6px;
+  border-radius: 999px;
+  background: var(--brass);
+  color: #fff;
+}
+.scenario__editor {
+  margin-top: 14px;
+  padding: 12px 14px;
+  background: var(--accent-soft);
+  border-radius: var(--radius);
+}
+.scenario__editor-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  margin-bottom: 8px;
+}
+.scenario__editor-title {
+  font-weight: 600;
+  color: var(--accent-strong);
+}
+.scenario__reset-cat {
+  padding: 4px 10px;
+  font-size: 0.8rem;
+}
+.scenario__rows {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 6px 14px;
+  margin: 0 0 10px;
+}
+.scenario__rows > div {
+  display: flex;
+  flex-direction: column;
+}
+.scenario__rows dt {
+  color: var(--muted);
+  font-size: 0.74rem;
+}
+.scenario__rows dd {
+  margin: 0;
+  font-weight: 600;
+  font-size: 0.92rem;
+}
+.scenario__steps {
+  margin-bottom: 10px;
+}
+.scenario__manual {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+.scenario__manual .muted {
+  font-size: 0.76rem;
+}
+.scenario__summary {
+  margin-top: 14px;
+  border-top: 1px solid var(--border);
+  padding-top: 12px;
+}
+.scenario__summary-title {
+  font-size: 0.95rem;
+  font-weight: 600;
+  margin: 0 0 8px;
+}
+.scenario__summary-rows > div {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: 10px;
+  padding: 4px 0;
+  font-size: 0.9rem;
+}
+.scenario__reset-all {
+  margin-top: 10px;
+  padding: 6px 12px;
+  font-size: 0.82rem;
+}
+
 /* 世帯人数別の参考比較カード */
 .compare-list {
   list-style: none;

@@ -118,13 +118,42 @@ export interface LivingCostResult {
 }
 
 /** 総合版へ反映する生活費がどの値かを示す。 */
-export type SelectedMonthlySource = 'breakdownTotal' | 'adjustedMonthlyTotal';
+export type SelectedMonthlySource = 'breakdownTotal' | 'quickAdjust' | 'categoryScenario';
+
+/** カテゴリ別見直しシナリオの1カテゴリ分。 */
+export interface CategoryAdjustment {
+  categoryKey: CategoryKey;
+  /** 現在の入力金額（円/月）。 */
+  currentMonthly: number;
+  /** 見直し後として試算する金額（円/月、0未満なし）。 */
+  scenarioMonthly: number;
+  /** scenarioMonthly − currentMonthly。 */
+  diffMonthly: number;
+}
+
+/** カテゴリ別見直しシナリオの試算結果（一時試算。元入力は変えない）。 */
+export interface CategoryScenarioResult {
+  /** 内訳合計（＝現在の生活費）。 */
+  baseMonthlyTotal: number;
+  /** 見直し後の生活費（0未満なし）。 */
+  scenarioMonthlyTotal: number;
+  /** scenarioMonthlyTotal − baseMonthlyTotal。 */
+  diffMonthly: number;
+  diffAnnual: number;
+  diffTenYears: number;
+  adjustments: CategoryAdjustment[];
+}
 
 /** localStorage に保存する生活費データ本体。 */
 export interface StoredLivingCost {
   /** 内訳合計（＝毎月生活費の総額）。 */
   monthlyTotal: number;
-  adjustedMonthlyTotal?: number;
+  /** QuickAdjust（生活費全体をざっくり動かす）で作った見直し後生活費（任意）。 */
+  quickAdjustedMonthlyTotal?: number;
+  /** カテゴリ別見直しシナリオの見直し後生活費（任意）。 */
+  categoryScenarioMonthlyTotal?: number;
+  /** カテゴリ別見直しシナリオの軽量保存（任意）。 */
+  categoryScenario?: CategoryScenarioResult;
   selectedMonthlyTotal: number;
   selectedMonthlySource: SelectedMonthlySource;
   annualTotal: number;

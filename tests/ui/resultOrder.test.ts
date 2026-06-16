@@ -45,3 +45,19 @@ describe('生活費で確認したいポイントの表示位置', () => {
     expect(review).toBeLessThan(source.indexOf('<FixedVariableDonut'));
   });
 });
+
+describe('気になる項目を動かしてみる（カテゴリ別シナリオ）の表示位置', () => {
+  const scenario = source.indexOf('<CategoryScenario');
+
+  it('カードが結果画面に存在する', () => {
+    expect(scenario).toBeGreaterThan(-1);
+  });
+
+  it('生活費で確認したいポイントより後ろに表示される', () => {
+    expect(scenario).toBeGreaterThan(source.indexOf('<ReviewPoints'));
+  });
+
+  it('固定費/変動費ドーナツより前に表示される', () => {
+    expect(scenario).toBeLessThan(source.indexOf('<FixedVariableDonut'));
+  });
+});

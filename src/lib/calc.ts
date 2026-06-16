@@ -1,5 +1,6 @@
 import type {
   CategoryAmounts,
+  CategoryScenarioResult,
   CategoryShare,
   ImprovementEffect,
   LivingCostInput,
@@ -120,14 +121,17 @@ export function calcResult(
 export function resolveSelectedMonthly(
   source: SelectedMonthlySource,
   values: {
-    adjustedMonthlyTotal?: number;
     breakdownTotal: number;
+    quickAdjustedMonthlyTotal?: number;
+    categoryScenarioMonthlyTotal?: number;
   },
 ): number {
   switch (source) {
-    case 'adjustedMonthlyTotal':
-      // 改善値が無ければ内訳合計にフォールバック。
-      return sanitizeAmount(values.adjustedMonthlyTotal ?? values.breakdownTotal);
+    case 'quickAdjust':
+      // 値が無ければ内訳合計にフォールバック。
+      return sanitizeAmount(values.quickAdjustedMonthlyTotal ?? values.breakdownTotal);
+    case 'categoryScenario':
+      return sanitizeAmount(values.categoryScenarioMonthlyTotal ?? values.breakdownTotal);
     case 'breakdownTotal':
     default:
       return sanitizeAmount(values.breakdownTotal);
@@ -137,23 +141,27 @@ export function resolveSelectedMonthly(
 /**
  * localStorage 保存用のペイロードを生成する純粋関数。
  * selectedSource に応じて selectedMonthlyTotal / selectedMonthlySource を確定させる。
+ * QuickAdjust（ざっくり）とカテゴリ別シナリオは独立した試算として任意保存する。
  */
 export function buildStoragePayload(params: {
   result: LivingCostResult;
   categories: CategoryAmounts;
   selectedSource: SelectedMonthlySource;
-  adjustedMonthlyTotal?: number;
+  quickAdjustedMonthlyTotal?: number;
+  categoryScenario?: CategoryScenarioResult;
   savedAt?: string;
 }): StoredLivingCostPayload {
-  const { result, categories, selectedSource } = params;
-  const adjustedMonthlyTotal =
-    params.adjustedMonthlyTotal != null
-      ? sanitizeAmount(params.adjustedMonthlyTotal)
+  const { result, categories, selectedSource, categoryScenario } = params;
+  const quickAdjustedMonthlyTotal =
+    params.quickAdjustedMonthlyTotal != null
+      ? sanitizeAmount(params.quickAdjustedMonthlyTotal)
       : undefined;
+  const categoryScenarioMonthlyTotal = categoryScenario?.scenarioMonthlyTotal;
 
   const selectedMonthlyTotal = resolveSelectedMonthly(selectedSource, {
-    adjustedMonthlyTotal,
     breakdownTotal: result.breakdownTotal,
+    quickAdjustedMonthlyTotal,
+    categoryScenarioMonthlyTotal,
   });
 
   // 世帯人数が入力されている場合のみ、参考比較の値も保存する。
@@ -166,7 +174,10 @@ export function buildStoragePayload(params: {
     livingCost: {
       // monthlyTotal は内訳合計（＝毎月生活費の総額）を保存する。
       monthlyTotal: result.breakdownTotal,
-      ...(adjustedMonthlyTotal != null ? { adjustedMonthlyTotal } : {}),
+      ...(quickAdjustedMonthlyTotal != null ? { quickAdjustedMonthlyTotal } : {}),
+      ...(categoryScenario != null
+        ? { categoryScenarioMonthlyTotal, categoryScenario }
+        : {}),
       selectedMonthlyTotal,
       selectedMonthlySource: selectedSource,
       annualTotal: result.annualTotal,
