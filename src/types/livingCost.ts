@@ -44,6 +44,27 @@ export interface HouseholdComparison {
 }
 
 /**
+ * 見直しポイントの性格。削減ではなく確認の方向性を表す。
+ *   check       … 内容を確認したい
+ *   fixed-cost  … 一度確認すると効果が続く固定費
+ *   careful     … 慎重に扱う（削減対象にしない）
+ *   planning    … 生活設計に見込んでおく
+ */
+export type ReviewTone = 'check' | 'fixed-cost' | 'careful' | 'planning';
+
+/** 結果画面に出す「生活費で確認したいポイント」1件分。 */
+export interface ReviewPoint {
+  id: string;
+  title: string;
+  /** 対象カテゴリ名または「固定費全体」「変動費全体」などの分類ラベル。 */
+  targetLabel: string;
+  categoryKey?: CategoryKey;
+  tone: ReviewTone;
+  message: string;
+  note: string;
+}
+
+/**
  * 入力状態。毎月生活費の総額はカテゴリ内訳の合計から自動計算するため、
  * ユーザーが総額を直接入力することはない（家計簿化を避け、整合性管理をさせない方針）。
  * referenceMonthlyTotal は、総合版から渡された「現在の生活費（円/月）」の参考値（任意）。

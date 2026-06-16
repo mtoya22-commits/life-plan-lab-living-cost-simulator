@@ -29,3 +29,19 @@ describe('結果画面の表示順', () => {
     expect(household).toBeGreaterThan(source.indexOf('<BreakdownBars'));
   });
 });
+
+describe('生活費で確認したいポイントの表示位置', () => {
+  const review = source.indexOf('<ReviewPoints');
+
+  it('カードが結果画面に存在する', () => {
+    expect(review).toBeGreaterThan(-1);
+  });
+
+  it('QuickAdjust より後ろに表示される', () => {
+    expect(review).toBeGreaterThan(source.indexOf('<QuickAdjust'));
+  });
+
+  it('固定費/変動費ドーナツより前に表示される', () => {
+    expect(review).toBeLessThan(source.indexOf('<FixedVariableDonut'));
+  });
+});
