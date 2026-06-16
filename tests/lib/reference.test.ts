@@ -77,3 +77,25 @@ describe('COMPARISON.labels', () => {
     }
   });
 });
+
+describe('COMPARISON の控えめな参考表示の文言', () => {
+  it('見出しに「参考」を含む（評価感を避ける）', () => {
+    expect(COMPARISON.heading).toContain('参考');
+  });
+
+  it('差のラベルは「参考値との差」', () => {
+    expect(COMPARISON.diffLabel).toBe('参考値との差');
+  });
+
+  it('補足は「良い悪いを示すものではなく」を含む', () => {
+    expect(COMPARISON.softNote).toContain('良い悪いを示すものではなく');
+  });
+
+  it('注記に「比較条件は完全には一致しません」趣旨を含む', () => {
+    expect(COMPARISON.notes.some((n) => n.includes('完全には一致しません'))).toBe(true);
+  });
+
+  it('5人以上は5人世帯の目安を参考表示する旨の注記を持つ', () => {
+    expect(COMPARISON.fivePlusNote).toContain('5人世帯の目安');
+  });
+});

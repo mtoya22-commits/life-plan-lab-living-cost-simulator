@@ -89,58 +89,14 @@ export default function ResultScreen({ input, result, onRecalc }: Props) {
         </section>
       )}
 
-      {/* What-if を上に（申し送り §4） */}
+      {/* What-if を上に（申し送り §4）。改善シナリオを主役にする。 */}
       <QuickAdjust
         monthlyTotal={result.monthlyTotal}
         reduction={reduction}
         onReductionChange={setReduction}
       />
 
-      {/* 固定費 / 変動費の割合（ドーナツ） */}
-      <section className="card">
-        <h2 className="section-heading">{RESULT.fixedVariableHeading}</h2>
-        <FixedVariableDonut
-          fixedTotal={result.fixedTotal}
-          variableTotal={result.variableTotal}
-          fixedRatio={result.fixedRatio}
-          variableRatio={result.variableRatio}
-        />
-        <details className="collapsible collapsible--muted">
-          <summary>固定費・変動費について</summary>
-          <div className="collapsible__body">
-            <p className="muted">{RESULT.fixedVariableNote}</p>
-          </div>
-        </details>
-      </section>
-
-      {/* 支出内訳グラフ（横棒） */}
-      <section className="card">
-        <h2 className="section-heading">{RESULT.breakdownHeading}</h2>
-        <BreakdownBars shares={result.shares} />
-      </section>
-
-      {/* 世帯人数別の一般的な支出目安との参考比較（任意入力時のみ） */}
-      {result.householdComparison && (
-        <HouseholdComparison data={result.householdComparison} />
-      )}
-
-      {/* 金額が大きいカテゴリ（上位3件・中立表現） */}
-      {result.topCategories.length > 0 && (
-        <section className="card">
-          <h2 className="section-heading">{RESULT.topHeading}</h2>
-          <ol className="top-list">
-            {result.topCategories.map((c) => (
-              <li key={c.key} className="top-list__item">
-                <span>{CATEGORY_LABELS[c.key]}</span>
-                <span className="top-list__amount">{formatMonthlyYen(c.amount)}</span>
-              </li>
-            ))}
-          </ol>
-          <p className="muted field-note">{RESULT.topNote}</p>
-        </section>
-      )}
-
-      {/* 改善効果テーブル（月1/3/5万円 → 年間効果） */}
+      {/* 改善効果テーブル（月1/3/5万円 → 年間効果）。QuickAdjust の直下に置く。 */}
       <section className="card">
         <h2 className="section-heading">{RESULT.effectHeading}</h2>
         <table className="effect-table">
@@ -160,6 +116,50 @@ export default function ResultScreen({ input, result, onRecalc }: Props) {
           </tbody>
         </table>
       </section>
+
+      {/* 固定費 / 変動費の割合（ドーナツ） */}
+      <section className="card">
+        <h2 className="section-heading">{RESULT.fixedVariableHeading}</h2>
+        <FixedVariableDonut
+          fixedTotal={result.fixedTotal}
+          variableTotal={result.variableTotal}
+          fixedRatio={result.fixedRatio}
+          variableRatio={result.variableRatio}
+        />
+        <details className="collapsible collapsible--muted">
+          <summary>固定費・変動費について</summary>
+          <div className="collapsible__body">
+            <p className="muted">{RESULT.fixedVariableNote}</p>
+          </div>
+        </details>
+      </section>
+
+      {/* 金額が大きいカテゴリ（上位3件・中立表現） */}
+      {result.topCategories.length > 0 && (
+        <section className="card">
+          <h2 className="section-heading">{RESULT.topHeading}</h2>
+          <ol className="top-list">
+            {result.topCategories.map((c) => (
+              <li key={c.key} className="top-list__item">
+                <span>{CATEGORY_LABELS[c.key]}</span>
+                <span className="top-list__amount">{formatMonthlyYen(c.amount)}</span>
+              </li>
+            ))}
+          </ol>
+          <p className="muted field-note">{RESULT.topNote}</p>
+        </section>
+      )}
+
+      {/* 支出内訳グラフ（横棒） */}
+      <section className="card">
+        <h2 className="section-heading">{RESULT.breakdownHeading}</h2>
+        <BreakdownBars shares={result.shares} />
+      </section>
+
+      {/* 参考：世帯人数別の一般的な支出目安（任意入力時のみ・折りたたみ・控えめ） */}
+      {result.householdComparison && (
+        <HouseholdComparison data={result.householdComparison} />
+      )}
 
       {/* 入力条件の確認 */}
       <details className="collapsible collapsible--muted">
