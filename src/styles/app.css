@@ -321,28 +321,6 @@
 }
 
 /* 改善効果テーブル */
-.effect-table {
-  width: 100%;
-  border-collapse: collapse;
-  margin-top: 8px;
-  font-size: 0.92rem;
-}
-.effect-table th,
-.effect-table td {
-  text-align: left;
-  padding: 8px 10px;
-  border-bottom: 1px solid var(--border);
-}
-.effect-table th {
-  color: var(--muted);
-  font-weight: 500;
-  font-size: 0.8rem;
-}
-.effect-table td:last-child {
-  font-weight: 600;
-  color: var(--accent-strong);
-}
-
 /* 入力条件・注記リスト */
 .condition-list,
 .disclaimer-list {

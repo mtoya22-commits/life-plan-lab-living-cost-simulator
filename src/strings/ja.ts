@@ -113,10 +113,6 @@ export const RESULT = {
   adjustIncreaseTenYear: '10年間の単純影響額',
   adjustSelected: '総合版へ反映する生活費',
   adjustReset: '元に戻す',
-  // 改善効果テーブル
-  effectHeading: '月1万円・3万円・5万円下げた場合の効果',
-  effectMonthlyLabel: '毎月',
-  effectAnnualLabel: '年間',
   // 反映ボタン（フィードバック §4：反映対象と金額を明示）
   reflectBreakdownBtn: (amount: string) => `内訳合計 ${amount} を生活設計に反映する`,
   reflectAdjustedBtn: (amount: string) => `改善後の生活費 ${amount} を生活設計に反映する`,
