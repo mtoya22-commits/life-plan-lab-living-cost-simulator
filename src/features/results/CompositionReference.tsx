@@ -10,20 +10,11 @@ function ItemRow({ item }: { item: CompositionComparisonItem }) {
       <div className="composition-item__head">
         <span className="composition-item__label">{item.label}</span>
       </div>
-      <div className="composition-item__shares">
-        <span>
-          {COMPOSITION.yourShare}：{formatPercent(item.userShare)}
-        </span>
-        <span className="muted">
-          {COMPOSITION.referenceShare}：{formatPercent(item.referenceShare)}
-        </span>
-      </div>
+      <p className="composition-item__shares">
+        {COMPOSITION.yourShare}：{formatPercent(item.userShare)}
+        <span className="muted"> / {COMPOSITION.referenceShare}：{formatPercent(item.referenceShare)}</span>
+      </p>
       <p className="composition-item__message">{item.message}</p>
-      {item.userFoodRatio != null && item.referenceFoodRatio != null && (
-        <p className="muted composition-item__food">
-          {COMPOSITION.foodRatioNote(item.userFoodRatio.toFixed(2), item.referenceFoodRatio.toFixed(2))}
-        </p>
-      )}
     </li>
   );
 }

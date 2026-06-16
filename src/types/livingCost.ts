@@ -158,9 +158,6 @@ export interface CompositionComparisonItem {
   referenceShare: number;
   /** userShare / referenceShare。 */
   balanceIndex: number;
-  /** 食費を1とした比（食費が小さすぎる場合は付けない）。 */
-  userFoodRatio?: number;
-  referenceFoodRatio?: number;
   level: CompositionLevel;
   message: string;
 }
