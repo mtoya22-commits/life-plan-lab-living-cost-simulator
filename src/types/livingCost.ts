@@ -147,6 +147,9 @@ export interface CategoryScenarioResult {
 /** 支出バランスの参考比較の度合い（構成比ベース。評価ではなく参考）。 */
 export type CompositionLevel = 'muchHigher' | 'higher' | 'near' | 'lower';
 
+/** 金額そのものが参考額に対してどの水準か。 */
+export type CompositionAmountLevel = 'aboveReference' | 'nearReference' | 'belowReference';
+
 /** 支出バランスの参考比較の1カテゴリ分。 */
 export interface CompositionComparisonItem {
   categoryKey: CategoryKey;
@@ -154,12 +157,17 @@ export interface CompositionComparisonItem {
   userMonthly: number;
   /** 比較対象内での構成比（user / comparableTotal）。 */
   userShare: number;
-  /** 参考の構成比（reference / referenceComparableTotal）。 */
+  /** 参考の構成比（referenceMonthly / referenceComparableTotal）。 */
   referenceShare: number;
   /** userShare / referenceShare。 */
   balanceIndex: number;
+  /** userMonthly / referenceMonthly（金額そのものの比）。 */
+  amountIndex: number;
+  amountLevel: CompositionAmountLevel;
   level: CompositionLevel;
   message: string;
+  /** 比率は大きめだが金額は参考額以下のときの補足（誤解防止）。 */
+  caveat?: string;
 }
 
 /** 支出バランスの参考比較の結果。 */

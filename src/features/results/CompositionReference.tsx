@@ -15,6 +15,7 @@ function ItemRow({ item }: { item: CompositionComparisonItem }) {
         <span className="muted"> / {COMPOSITION.referenceShare}：{formatPercent(item.referenceShare)}</span>
       </p>
       <p className="composition-item__message">{item.message}</p>
+      {item.caveat && <p className="muted composition-item__caveat">{item.caveat}</p>}
     </li>
   );
 }
@@ -66,6 +67,8 @@ export default function CompositionReference({ data }: { data: CompositionCompar
       <details className="collapsible collapsible--muted">
         <summary>{COMPOSITION.noteHeading}</summary>
         <div className="collapsible__body">
+          <p className="muted">{COMPOSITION.denominatorNote}</p>
+          <p className="muted">{COMPOSITION.amountNote}</p>
           <p className="muted">{COMPOSITION.note}</p>
         </div>
       </details>

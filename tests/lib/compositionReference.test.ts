@@ -52,6 +52,23 @@ describe('buildCompositionComparison — 比較対象', () => {
     expect(r.referenceComparableTotal).toBe(REF_TOTAL);
   });
 
+  it('参考値の分母に住宅費・保険料・サブスク・その他を含めない', () => {
+    const keys = Object.keys(REFERENCE_COMPOSITION_2025);
+    for (const excluded of ['housing', 'rent', 'insurance', 'subscription', 'other']) {
+      expect(keys).not.toContain(excluded);
+    }
+    // 8カテゴリのみで構成され、それらの合計と一致する。
+    expect(keys).toHaveLength(8);
+    expect(comp({ food: 100000 }).referenceComparableTotal).toBe(REF_TOTAL);
+  });
+
+  it('referenceShare は totalRatio ではなく referenceMonthly / referenceComparableTotal', () => {
+    const food = comp({ food: 100000, communication: 100000 }).items.find((i) => i.categoryKey === 'food')!;
+    expect(food.referenceShare).toBeCloseTo(REFERENCE_COMPOSITION_2025.food.monthlyAmount / REF_TOTAL, 6);
+    // 消費支出全体に対する totalRatio（0.302）とは一致しない。
+    expect(food.referenceShare).not.toBeCloseTo(REFERENCE_COMPOSITION_2025.food.totalRatio, 3);
+  });
+
   it('比較できる入力が無ければ items / highlighted は空', () => {
     const r = comp({ insurance: 50000 });
     expect(r.items).toHaveLength(0);
@@ -158,9 +175,9 @@ describe('ラベル・注記・役割分担', () => {
     expect(COMPOSITION.yourShare).not.toBe('あなたの比率');
   });
 
-  it('注記に比較対象カテゴリ内の構成比・除外の趣旨を含む', () => {
+  it('注記に比較対象カテゴリ内の構成比・分母除外の趣旨を含む', () => {
     expect(COMPOSITION.note).toContain('比較対象カテゴリ内の構成比');
-    expect(COMPOSITION.note).toContain('除外');
+    expect(COMPOSITION.note).toContain('分母に含めていません');
     expect(COMPOSITION.note).toMatch(/保険料・サブスク・その他/);
   });
 
@@ -178,6 +195,64 @@ describe('ラベル・注記・役割分担', () => {
   it('カテゴリ別シナリオへの接続文を持つ', () => {
     expect(COMPOSITION.scenarioLink).toContain('気になる項目を動かしてみる');
   });
+
+  it('参考構成比ラベルは「比較対象カテゴリ内の参考構成比」', () => {
+    expect(COMPOSITION.referenceShare).toBe('比較対象カテゴリ内の参考構成比');
+  });
+
+  it('注記に「住宅費は分母に含めていない」趣旨を含む', () => {
+    expect(COMPOSITION.denominatorNote).toContain('住宅費');
+    expect(COMPOSITION.denominatorNote).toContain('分母に含めていません');
+    expect(COMPOSITION.note).toContain('住宅費');
+  });
+
+  it('注記に「比率だけでなく金額もあわせて参考にする」趣旨を含む', () => {
+    expect(COMPOSITION.amountNote).toMatch(/比率だけでなく/);
+    expect(COMPOSITION.amountNote).toMatch(/金額もあわせて/);
+  });
+});
+
+describe('amountIndex / amountLevel と強調の抑制', () => {
+  it('amountIndex が userMonthly / referenceMonthly で計算される', () => {
+    const r = comp({ food: 100000, communication: 20000, leisure: 5000 });
+    const comm = r.items.find((i) => i.categoryKey === 'communication')!;
+    expect(comm.amountIndex).toBeCloseTo(20000 / REFERENCE_COMPOSITION_2025.communication.monthlyAmount, 6);
+  });
+
+  it('amountLevel が正しく分類される（above / near / below）', () => {
+    const r = comp({ food: 100000, communication: 20000, leisure: 5000 });
+    const comm = r.items.find((i) => i.categoryKey === 'communication')!; // 20000/11672≈1.71
+    const food = r.items.find((i) => i.categoryKey === 'food')!; // 100000/94895≈1.05
+    const leisure = r.items.find((i) => i.categoryKey === 'leisure')!; // 5000/32125≈0.16
+    expect(comm.amountLevel).toBe('aboveReference');
+    expect(food.amountLevel).toBe('nearReference');
+    expect(leisure.amountLevel).toBe('belowReference');
+  });
+
+  it('balanceIndex が高くても amountIndex が低いカテゴリは highlighted に出ない（補足を付ける）', () => {
+    // leisure: 比率は大きめ（balanceIndex>=1.2）だが金額は参考額以下（amountIndex<1）。
+    const r = comp({ communication: 40000, leisure: 12000 });
+    expect(r.lowData).toBe(false);
+    const leisure = r.items.find((i) => i.categoryKey === 'leisure')!;
+    expect(leisure.balanceIndex).toBeGreaterThanOrEqual(1.2);
+    expect(leisure.amountIndex).toBeLessThan(1.0);
+    expect(r.highlightedItems.map((i) => i.categoryKey)).not.toContain('leisure');
+    expect(leisure.caveat).toBeTruthy();
+  });
+
+  it('balanceIndex と amountIndex が両方高いカテゴリは highlighted に出る', () => {
+    const r = comp({ communication: 40000, leisure: 12000 });
+    const comm = r.highlightedItems.find((i) => i.categoryKey === 'communication');
+    expect(comm).toBeDefined();
+    expect(comm!.balanceIndex).toBeGreaterThanOrEqual(1.2);
+    expect(comm!.amountIndex).toBeGreaterThanOrEqual(1.0);
+  });
+
+  it('食費が低いケースでも、金額が参考額以下のカテゴリは過剰に強調しない', () => {
+    const r = comp({ food: 10000, communication: 20000, leisure: 20000 });
+    // leisure は構成比は大きいが金額は参考額(32125)以下 → highlighted から除外。
+    expect(r.highlightedItems.map((i) => i.categoryKey)).not.toContain('leisure');
+  });
 });
 
 describe('COMPOSITION 文言 — 禁止表現を含まない', () => {
@@ -185,8 +260,14 @@ describe('COMPOSITION 文言 — 禁止表現を含まない', () => {
   const forbidden = /高すぎ|悪いです|無駄|削るべき|節約しましょう|減らしましょう|見直しが必要|平均より悪い/;
   it('levels と主要文言に禁止表現が無い', () => {
     for (const v of Object.values(COMPOSITION.levels)) expect(v).not.toMatch(forbidden);
+    for (const v of Object.values(COMPOSITION.carefulMessages)) expect(v).not.toMatch(forbidden);
     expect(COMPOSITION.intro).not.toMatch(forbidden);
     expect(COMPOSITION.note).not.toMatch(forbidden);
     expect(COMPOSITION.emptyNote).not.toMatch(forbidden);
+    expect(COMPOSITION.amountCaveat).not.toMatch(forbidden);
+    expect(COMPOSITION.denominatorNote).not.toMatch(forbidden);
+    expect(COMPOSITION.amountNote).not.toMatch(forbidden);
+    expect(COMPOSITION.lowDataNote).not.toMatch(forbidden);
+    expect(COMPOSITION.scenarioLink).not.toMatch(forbidden);
   });
 });

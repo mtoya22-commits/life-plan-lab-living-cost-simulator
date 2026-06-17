@@ -1,5 +1,6 @@
 import type {
   CategoryKey,
+  CompositionAmountLevel,
   CompositionComparisonItem,
   CompositionComparisonResult,
   CompositionLevel,
@@ -43,6 +44,12 @@ function levelFromIndex(balanceIndex: number): CompositionLevel {
   return 'lower';
 }
 
+function amountLevelFromIndex(amountIndex: number): CompositionAmountLevel {
+  if (amountIndex >= 1.1) return 'aboveReference';
+  if (amountIndex >= 0.8) return 'nearReference';
+  return 'belowReference';
+}
+
 function userAmountOf(result: LivingCostResult, key: CategoryKey): number {
   return result.shares.find((s) => s.key === key)?.amount ?? 0;
 }
@@ -72,12 +79,20 @@ export function buildCompositionComparison(result: LivingCostResult): Compositio
     const ref = REFERENCE_COMPOSITION_2025[key];
     const userMonthly = userAmountOf(result, key);
     const userShare = userMonthly / comparableTotal;
+    // referenceShare は必ず referenceMonthly / referenceComparableTotal で計算する
+    // （消費支出全体に対する totalRatio は使わない）。
     const referenceShare = ref.monthlyAmount / referenceComparableTotal;
     const balanceIndex = referenceShare > 0 ? userShare / referenceShare : 0;
+    // 金額そのものの比。構成比だけで強調しすぎないための補助指標。
+    const amountIndex = ref.monthlyAmount > 0 ? userMonthly / ref.monthlyAmount : 0;
     const level = levelFromIndex(balanceIndex);
+    const amountLevel = amountLevelFromIndex(amountIndex);
+    const shareHigh = level === 'higher' || level === 'muchHigher';
     // 医療費・子ども関連費が上位のときは、削減候補に見せない見込み文脈にする。
     const careful = (CAREFUL_KEYS as readonly string[]).includes(key);
-    const useCareful = careful && (level === 'higher' || level === 'muchHigher');
+    const useCareful = careful && shareHigh;
+    // 比率は大きめだが金額は参考額以下のとき、金額が大きいと誤解させない補足を添える。
+    const caveat = shareHigh && amountIndex < 1.0 ? COMPOSITION.amountCaveat : undefined;
     return {
       categoryKey: key,
       label: ref.label,
@@ -85,18 +100,22 @@ export function buildCompositionComparison(result: LivingCostResult): Compositio
       userShare,
       referenceShare,
       balanceIndex,
+      amountIndex,
+      amountLevel,
       level,
       message: useCareful
         ? COMPOSITION.carefulMessages[key as 'medical' | 'children']
         : COMPOSITION.levels[level],
+      ...(caveat ? { caveat } : {}),
     };
   });
 
-  // 入力が少なすぎるときは強調を出さない。
+  // 強調は「比率が大きめ（balanceIndex>=1.2）かつ 金額も参考額以上（amountIndex>=1.0）」のみ。
+  // 比率だけ大きく金額が参考額以下のカテゴリは強く出さない。入力が少なすぎるときも出さない。
   const highlightedItems = lowData
     ? []
     : items
-        .filter((i) => i.level === 'higher' || i.level === 'muchHigher')
+        .filter((i) => (i.level === 'higher' || i.level === 'muchHigher') && i.amountIndex >= 1.0)
         .sort((a, b) => b.balanceIndex - a.balanceIndex)
         .slice(0, 3);
 
