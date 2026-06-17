@@ -51,6 +51,11 @@ export const INTRO = {
   notBudgetApp:
     'これは家計簿アプリではありません。1円単位の管理ではなく、月額の目安で見直しポイントを探るためのツールです。',
   start: 'はじめる',
+  // 入力途中の下書きがあるときの「続きから再開」。
+  resumeHeading: '前回の入力内容から再開できます',
+  resumeLead: '前回入力した内容が、この端末に一時保存されています。',
+  resume: '前回の内容から再開する',
+  startNew: '新しく入力する',
 };
 
 export const INPUT = {
@@ -72,6 +77,11 @@ export const INPUT = {
   unit: '円',
   toResult: '結果を見る',
   back: '戻る',
+  // 全カテゴリ0円のときのやさしいガード（赤・警告色は使わない）。
+  emptyGuard:
+    '生活費の内訳がまだ入力されていません。わかる範囲で1つ以上入力すると、生活費のバランスを確認できます。まずは食費や通信費など、わかる項目から大丈夫です。',
+  // 「条件を変えて再計算」で戻ってきたときの一言。
+  recalcNote: '入力内容は残したまま、試算条件を見直せます。',
   // 総合版から渡された参考値との差（フィードバック §6）。止めずにやさしい注意のみ。
   referenceLabel: '総合版で入力されていた生活費',
   breakdownLabel: '今回の内訳合計',
@@ -115,6 +125,10 @@ export const RESULT = {
   adjustReset: '元に戻す',
   // 反映ボタン（反映対象と金額を明示。現在 / ざっくり調整後 / カテゴリ別見直し後）
   reflectHeading: '生活設計に反映する',
+  // 各ボタンの意味の補足。
+  reflectBreakdownNote: '入力した内訳合計をそのまま使います。',
+  reflectQuickNote: '生活費全体をまとめて動かした試算です。',
+  reflectScenarioNote: '選んだ項目を個別に動かした試算です。',
   reflectBreakdownBtn: (amount: string) => `現在の生活費 ${amount} を生活設計に反映する`,
   reflectQuickBtn: (amount: string) => `ざっくり調整後 ${amount} を生活設計に反映する`,
   reflectScenarioBtn: (amount: string) => `カテゴリ別見直し後 ${amount} を生活設計に反映する`,

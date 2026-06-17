@@ -213,3 +213,14 @@ export interface StoredLivingCostPayload {
   savedAt: string;
   livingCost: StoredLivingCost;
 }
+
+/**
+ * 入力途中の自動保存（キー: lifePlanLab:livingCostDraft）。
+ * これは「下書き」であり、総合版反映用の確定データ（StoredLivingCostPayload）とは別物。
+ */
+export interface LivingCostDraft {
+  version: 1;
+  savedAt: string;
+  categories: CategoryAmounts;
+  householdSize?: HouseholdSize;
+}

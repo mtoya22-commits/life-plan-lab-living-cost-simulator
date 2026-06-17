@@ -4,6 +4,7 @@ import {
   buildStoragePayload,
   calcResult,
   improvementEffect,
+  isResultEmpty,
   resolveSelectedMonthly,
   sanitizeAmount,
   sumBreakdown,
@@ -143,6 +144,16 @@ describe('calcResult', () => {
     const withRef = calcResult({ ...sampleInput, referenceMonthlyTotal: 350000 });
     expect(withRef.referenceMonthlyTotal).toBe(350000);
     expect(withRef.referenceDiff).toBe(350000 - 310000);
+  });
+});
+
+describe('isResultEmpty', () => {
+  it('全カテゴリ0円なら true（やさしいガード対象）', () => {
+    expect(isResultEmpty(calcResult({ categories: emptyCategories }))).toBe(true);
+  });
+
+  it('1カテゴリでも入力があれば false（結果へ進める）', () => {
+    expect(isResultEmpty(calcResult({ categories: withCategories({ food: 30000 }) }))).toBe(false);
   });
 });
 

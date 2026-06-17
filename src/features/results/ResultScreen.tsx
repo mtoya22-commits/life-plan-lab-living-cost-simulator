@@ -5,10 +5,11 @@ import type {
   LivingCostResult,
   SelectedMonthlySource,
 } from '../../types/livingCost';
-import { adjustedMonthly, buildStoragePayload } from '../../lib/calc';
+import { adjustedMonthly, buildStoragePayload, resolveSelectedMonthly } from '../../lib/calc';
 import { getReviewPoints } from '../../lib/reviewRules';
 import { buildCategoryScenario, hasCategoryScenario } from '../../lib/categoryScenario';
 import { buildCompositionComparison } from '../../lib/compositionReference';
+import { buildComprehensiveUrl } from '../../lib/comprehensiveLink';
 import { saveLivingCost } from '../../lib/storage';
 import { formatManYen, formatMonthlyYen, formatYen } from '../../lib/format';
 import { CATEGORY_LABELS, COMPREHENSIVE_URL_PLACEHOLDER, INPUT, RESULT } from '../../strings/ja';
@@ -32,6 +33,8 @@ export default function ResultScreen({ input, result, onRecalc }: Props) {
   const [reduction, setReduction] = useState(0);
   const [scenarioOverrides, setScenarioOverrides] = useState<Partial<Record<CategoryKey, number>>>({});
   const [savedMessage, setSavedMessage] = useState<string | null>(null);
+  // 最後に反映した（または既定の）対象。総合版リンクへ付与する値の決定に使う。
+  const [reflectedSource, setReflectedSource] = useState<SelectedMonthlySource>('breakdownTotal');
 
   const hasQuickAdjust = reduction > 0;
   const quickAdjustedTotal = adjustedMonthly(result.monthlyTotal, reduction);
@@ -64,6 +67,7 @@ export default function ResultScreen({ input, result, onRecalc }: Props) {
       setSavedMessage(RESULT.reflectFailed);
       return;
     }
+    setReflectedSource(source);
     setSavedMessage(
       source === 'quickAdjust'
         ? RESULT.reflectedQuick
@@ -72,6 +76,18 @@ export default function ResultScreen({ input, result, onRecalc }: Props) {
           : RESULT.reflectedBreakdown,
     );
   };
+
+  // 総合版リンクへ付与する補助パラメータ（主役は localStorage）。
+  const linkMonthly = resolveSelectedMonthly(reflectedSource, {
+    breakdownTotal: result.breakdownTotal,
+    quickAdjustedMonthlyTotal: hasQuickAdjust ? quickAdjustedTotal : undefined,
+    categoryScenarioMonthlyTotal: hasScenario ? scenario.scenarioMonthlyTotal : undefined,
+  });
+  const comprehensiveUrl = buildComprehensiveUrl(
+    COMPREHENSIVE_URL_PLACEHOLDER,
+    linkMonthly,
+    reflectedSource,
+  );
 
   return (
     <div className="screen fade-rise">
@@ -201,37 +217,46 @@ export default function ResultScreen({ input, result, onRecalc }: Props) {
 
       {/* 反映ボタン（現在 / ざっくり調整後 / カテゴリ別見直し後を明示） */}
       <section className="card reflect">
-        <button
-          type="button"
-          className="btn btn--primary btn--block"
-          onClick={() => reflect('breakdownTotal')}
-        >
-          {RESULT.reflectBreakdownBtn(formatManYen(result.breakdownTotal))}
-        </button>
-        {hasQuickAdjust && (
+        <div className="reflect__item">
           <button
             type="button"
-            className="btn btn--recommended btn--block"
-            onClick={() => reflect('quickAdjust')}
+            className="btn btn--primary btn--block"
+            onClick={() => reflect('breakdownTotal')}
           >
-            {RESULT.reflectQuickBtn(formatManYen(quickAdjustedTotal))}
+            {RESULT.reflectBreakdownBtn(formatManYen(result.breakdownTotal))}
           </button>
+          <p className="muted reflect__note">{RESULT.reflectBreakdownNote}</p>
+        </div>
+        {hasQuickAdjust && (
+          <div className="reflect__item">
+            <button
+              type="button"
+              className="btn btn--recommended btn--block"
+              onClick={() => reflect('quickAdjust')}
+            >
+              {RESULT.reflectQuickBtn(formatManYen(quickAdjustedTotal))}
+            </button>
+            <p className="muted reflect__note">{RESULT.reflectQuickNote}</p>
+          </div>
         )}
         {hasScenario && (
-          <button
-            type="button"
-            className="btn btn--recommended btn--block"
-            onClick={() => reflect('categoryScenario')}
-          >
-            {RESULT.reflectScenarioBtn(formatManYen(scenario.scenarioMonthlyTotal))}
-          </button>
+          <div className="reflect__item">
+            <button
+              type="button"
+              className="btn btn--recommended btn--block"
+              onClick={() => reflect('categoryScenario')}
+            >
+              {RESULT.reflectScenarioBtn(formatManYen(scenario.scenarioMonthlyTotal))}
+            </button>
+            <p className="muted reflect__note">{RESULT.reflectScenarioNote}</p>
+          </div>
         )}
         {savedMessage && (
           <p className="reflect__msg" role="status">
             {savedMessage}
           </p>
         )}
-        <a className="btn btn--block reflect__link" href={COMPREHENSIVE_URL_PLACEHOLDER}>
+        <a className="btn btn--block reflect__link" href={comprehensiveUrl}>
           {RESULT.toComprehensive}
         </a>
       </section>

@@ -1,3 +1,4 @@
+import { useState } from 'react';
 import type {
   CategoryAmounts,
   CategoryKey,
@@ -5,6 +6,7 @@ import type {
   LivingCostResult,
 } from '../../types/livingCost';
 import { CATEGORY_KEYS } from '../../lib/classification';
+import { isResultEmpty } from '../../lib/calc';
 import { formatManYen, formatMonthlyYen } from '../../lib/format';
 import { CATEGORY_HELP, CATEGORY_LABELS, HOUSEHOLD, INPUT } from '../../strings/ja';
 import QuestionCard from './QuestionCard';
@@ -36,12 +38,23 @@ export default function InputScreen({
   const showReferenceDiff =
     result.referenceDiff != null && Math.abs(result.referenceDiff) >= 10000;
 
+  // 全カテゴリ0円のときは結果へ進めず、やさしく案内する（赤・警告色は使わない）。
+  const [showEmptyGuard, setShowEmptyGuard] = useState(false);
+  const handleSubmit = () => {
+    if (isResultEmpty(result)) {
+      setShowEmptyGuard(true);
+      return;
+    }
+    onSubmit();
+  };
+
   return (
     <div className="step-layout">
       <div className="step-content">
         <section className="step-head">
           <h1 className="section-heading">{INPUT.heading}</h1>
           <p className="muted">{INPUT.lead}</p>
+          <p className="muted field-note">{INPUT.recalcNote}</p>
         </section>
 
         <p className="reassure">{INPUT.reassure}</p>
@@ -122,6 +135,12 @@ export default function InputScreen({
             <span>{formatManYen(result.annualTotal)}</span>
           </div>
         </div>
+
+        {showEmptyGuard && isResultEmpty(result) && (
+          <p className="reassure" role="status">
+            {INPUT.emptyGuard}
+          </p>
+        )}
       </div>
 
       <div className="bottom-nav">
@@ -129,7 +148,7 @@ export default function InputScreen({
           <button type="button" className="btn btn--skip" onClick={onBack}>
             {INPUT.back}
           </button>
-          <button type="button" className="btn btn--primary nav-grow" onClick={onSubmit}>
+          <button type="button" className="btn btn--primary nav-grow" onClick={handleSubmit}>
             {INPUT.toResult}
           </button>
         </div>

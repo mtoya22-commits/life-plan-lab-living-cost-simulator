@@ -345,6 +345,16 @@
   margin-bottom: 4px;
 }
 
+.reflect__item + .reflect__item {
+  margin-top: 12px;
+}
+.reflect__note {
+  margin: 4px 0 0;
+  font-size: 0.78rem;
+}
+.resume .btn--block + .btn--block {
+  margin-top: 8px;
+}
 .reflect__msg {
   margin: 4px 0 0;
   color: var(--accent-strong);
