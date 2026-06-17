@@ -598,6 +598,10 @@
   margin: 4px 0 0;
   font-size: 0.86rem;
 }
+.composition-item__caveat {
+  margin: 4px 0 0;
+  font-size: 0.76rem;
+}
 
 /* 世帯人数別の参考比較カード */
 .compare-list {
