@@ -14,6 +14,11 @@ import { compareWithReference } from './reference';
 const MONTHS_PER_YEAR = 12;
 const MONTHS_PER_DECADE = 120;
 
+/** 内訳合計が 0（実質的に未入力）かどうか。結果へ進める前のやさしいガードに使う。 */
+export function isResultEmpty(result: LivingCostResult): boolean {
+  return result.breakdownTotal === 0;
+}
+
 /**
  * 入力値を安全な金額に正規化する。
  * 空欄・NaN・Infinity・負値はすべて 0 として扱い、クラッシュや負の支出を防ぐ。

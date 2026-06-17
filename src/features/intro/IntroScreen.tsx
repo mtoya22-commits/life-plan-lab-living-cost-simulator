@@ -1,6 +1,14 @@
 import { INTRO } from '../../strings/ja';
 
-export default function IntroScreen({ onStart }: { onStart: () => void }) {
+interface Props {
+  /** 入力途中の下書きがあるか。 */
+  hasDraft: boolean;
+  onStart: () => void;
+  onResume: () => void;
+  onStartNew: () => void;
+}
+
+export default function IntroScreen({ hasDraft, onStart, onResume, onStartNew }: Props) {
   return (
     <div className="screen fade-rise">
       <header className="intro-hero">
@@ -10,6 +18,19 @@ export default function IntroScreen({ onStart }: { onStart: () => void }) {
       </header>
 
       <p className="reassure">{INTRO.reassure}</p>
+
+      {hasDraft && (
+        <section className="card resume">
+          <h2 className="section-heading">{INTRO.resumeHeading}</h2>
+          <p className="muted">{INTRO.resumeLead}</p>
+          <button type="button" className="btn btn--primary btn--block" onClick={onResume}>
+            {INTRO.resume}
+          </button>
+          <button type="button" className="btn btn--block" onClick={onStartNew}>
+            {INTRO.startNew}
+          </button>
+        </section>
+      )}
 
       <section className="card">
         <h2 className="section-heading">{INTRO.canDoHeading}</h2>
@@ -22,9 +43,11 @@ export default function IntroScreen({ onStart }: { onStart: () => void }) {
 
       <p className="muted note-block">{INTRO.notBudgetApp}</p>
 
-      <button type="button" className="btn btn--primary btn--block" onClick={onStart}>
-        {INTRO.start}
-      </button>
+      {!hasDraft && (
+        <button type="button" className="btn btn--primary btn--block" onClick={onStart}>
+          {INTRO.start}
+        </button>
+      )}
     </div>
   );
 }
