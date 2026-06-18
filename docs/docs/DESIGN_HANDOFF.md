@@ -183,3 +183,65 @@ localStorage 自動保存（キー例 `fire-lifeplan-lab.v2.session.v1`）＋「
 最初の一歩のおすすめ: **別リポを切り、`shared-tokens.css` を貼り、`strings/ja.ts`・`engine`・
 `store` を同じ規約で立ち上げ、`mortgageEngine.ts` を流用する。**
 入力 → 結果 → 再計算のループ構造と文言トーンを最優先で揃えると、別アプリでも「同じ家族」に感じられる。
+
+---
+
+## 9. 総合版連携の契約（生活費見直しシミュレーター）
+
+各小型シミュレーターは、結果を **localStorage** で総合版へ受け渡す。総合版は「生活設計に反映する」を
+押した結果だけを読む。生活費見直しシミュレーター（living-cost-simulator）の現行契約は以下。
+
+### 9.1 localStorage キー（2系統・混同しない）
+
+| キー | 役割 | 総合版は読む？ |
+|---|---|---|
+| `lifePlanLab:livingCost` | **確定データ**。結果画面「生活設計に反映する」押下時のみ更新。 | **読む**（唯一の確定経路） |
+| `lifePlanLab:livingCostDraft` | 入力途中の**下書き**（自動保存。途中離脱からの復元用）。 | **読まない**（無視する） |
+
+> 確定（livingCost）と下書き（livingCostDraft）は別物。自動保存は下書きキーのみを更新し、確定データには触れない。
+
+### 9.2 確定データの形（`lifePlanLab:livingCost`）
+
+```jsonc
+{
+  "version": 1,
+  "source": "living-cost-simulator",
+  "savedAt": "ISO 8601 文字列",
+  "livingCost": {
+    "monthlyTotal": 0,            // 毎月の生活費（＝カテゴリ内訳合計）
+    "annualTotal": 0,             // monthlyTotal × 12
+    "breakdownTotal": 0,          // 内訳合計（monthlyTotal と同値）
+    "fixedCostTotal": 0,          // 固定費合計
+    "variableCostTotal": 0,       // 変動費合計
+    "quickAdjustedMonthlyTotal": 0,      // 任意: 全体ざっくり調整後
+    "categoryScenarioMonthlyTotal": 0,   // 任意: カテゴリ別見直し後
+    "categoryScenario": { /* 任意: 調整内訳の軽量保存 */ },
+    "selectedMonthlyTotal": 0,    // ★総合版へ反映する生活費（ユーザーが選んだ対象）
+    "selectedMonthlySource": "breakdownTotal", // 由来。下記3値のいずれか
+    "householdSize": 3,                  // 任意: 世帯人数（5=5人以上）
+    "householdReferenceMonthly": 0,      // 任意: 世帯人数別の参考目安
+    "householdReferenceDiffMonthly": 0,  // 任意: 目安との差
+    "categories": { "food": 0, "dailyGoods": 0, "utilities": 0, "communication": 0,
+      "insurance": 0, "car": 0, "medical": 0, "children": 0, "leisure": 0,
+      "subscription": 0, "other": 0 }
+  }
+}
+```
+
+### 9.3 総合版が読むときの推奨
+
+- 生活費は **`selectedMonthlyTotal`** を使う（無い/旧データなら `breakdownTotal` にフォールバック）。
+- 反映対象の由来は **`selectedMonthlySource`** で判別: `'breakdownTotal'`（現在の内訳合計）/
+  `'quickAdjust'`（全体ざっくり調整後）/ `'categoryScenario'`（カテゴリ別見直し後）。
+- この生活費は **住宅ローン返済額・大学費用などの大きな教育費を含まない**（住宅ローン/教育費シミュレーターと
+  二重計上しないための定義）。総合版で合算する際はこの前提に注意。
+
+### 9.4 URL パラメータ（補助・主役は localStorage）
+
+- **受け取り**（当アプリが読む）: `?ref=<円>` … 総合版の「現在の生活費（月）」を渡すと、入力/結果画面で
+  内訳合計との差をやさしく表示する（止めない・参考のみ）。
+- **送り出し**（総合版へのリンクに付与）: `?livingCostMonthly=<円>&livingCostSource=<§9.3 の3値>`。
+  将来連携用の補助情報で、総合版が未対応でも壊れない（読み飛ばされるだけ）。汎用名 `monthly` 単体は
+  他シミュレーターと衝突しやすいので使わない。
+
+> 連携の唯一の確定経路は `lifePlanLab:livingCost`。下書き・URL パラメータは確定扱いしない。
