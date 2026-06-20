@@ -13,7 +13,7 @@ export default function QuestionCard({ title, help, children }: Props) {
     <div className="qcard">
       <div className="qcard__head">
         <span className="qcard__title">{title}</span>
-        {help && <HelpTooltip text={help} />}
+        {help && <HelpTooltip text={help} label={title} />}
       </div>
       <div className="qcard__body">{children}</div>
     </div>

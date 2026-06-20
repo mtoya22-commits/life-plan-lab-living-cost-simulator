@@ -64,19 +64,25 @@ export default function CategoryScenario({ result, overrides, priorityKeys, onCh
 
       {/* カテゴリ選択チップ（現在額つき） */}
       <div className="choice-group scenario__chips">
-        {ordered.map((key) => (
-          <button
-            key={key}
-            type="button"
-            className={`choice scenario__chip${selected === key ? ' choice--selected' : ''}`}
-            aria-pressed={selected === key}
-            onClick={() => setPicked(key)}
-          >
-            <span className="scenario__chip-label">{CATEGORY_LABELS[key]}</span>
-            <span className="scenario__chip-amount">{formatYen(currentOf(key))}</span>
-            {isAdjusted(key) && <span className="scenario__badge">{SCENARIO.trialBadge}</span>}
-          </button>
-        ))}
+        {ordered.map((key) => {
+          const state = selected === key ? SCENARIO.chipSelected : SCENARIO.chipUnselected;
+          const adjustedNote = isAdjusted(key) ? `、${SCENARIO.trialBadge}` : '';
+          const chipLabel = `${CATEGORY_LABELS[key]} ${formatYen(currentOf(key))}、${state}${adjustedNote}`;
+          return (
+            <button
+              key={key}
+              type="button"
+              className={`choice scenario__chip${selected === key ? ' choice--selected' : ''}`}
+              aria-pressed={selected === key}
+              aria-label={chipLabel}
+              onClick={() => setPicked(key)}
+            >
+              <span className="scenario__chip-label">{CATEGORY_LABELS[key]}</span>
+              <span className="scenario__chip-amount">{formatYen(currentOf(key))}</span>
+              {isAdjusted(key) && <span className="scenario__badge">{SCENARIO.trialBadge}</span>}
+            </button>
+          );
+        })}
       </div>
 
       {/* 選択カテゴリの編集 */}

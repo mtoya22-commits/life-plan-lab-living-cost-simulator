@@ -1,5 +1,16 @@
 import { describe, it, expect } from 'vitest';
-import { buildComprehensiveUrl } from '../../src/lib/comprehensiveLink';
+import { LIFE_PLAN_LAB_URL, buildComprehensiveUrl } from '../../src/lib/comprehensiveLink';
+
+describe('LIFE_PLAN_LAB_URL', () => {
+  it('本番デフォルトは fire-lifeplan-lab.com（env 未設定時）', () => {
+    // テスト環境では VITE_LIFE_PLAN_LAB_URL を設定していないため、本番デフォルトが使われる。
+    expect(LIFE_PLAN_LAB_URL).toBe('https://fire-lifeplan-lab.com/life-plan-simulator/');
+  });
+
+  it('プレースホルダ（example.com）は残っていない', () => {
+    expect(LIFE_PLAN_LAB_URL).not.toContain('example.com');
+  });
+});
 
 describe('buildComprehensiveUrl', () => {
   it('livingCostMonthly と livingCostSource を付与する', () => {

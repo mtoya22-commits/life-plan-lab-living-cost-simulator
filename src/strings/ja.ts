@@ -66,6 +66,8 @@ export const INPUT = {
   totalDefinitionNote:
     'ここで入力する生活費は、住宅ローン返済額や大学費用などの大きな教育費を除いた、日常生活費の目安です。通信費・保険料・車関連費・日常的な子ども関連費は含めてかまいません。',
   breakdownHeading: 'カテゴリ別の入力',
+  // 住宅ローン・教育費の扱いを説明する折りたたみの見出し。
+  mortgageHeading: '住宅ローン・教育費の扱い',
   // ライブ合計サマリー
   liveMonthly: '毎月の生活費（合計）',
   liveAnnual: '年間の生活費',
@@ -97,6 +99,8 @@ export const RESULT = {
   fixedTotal: '固定費',
   variableTotal: '変動費',
   fixedVariableHeading: '固定費と変動費の割合',
+  // 固定費・変動費の補足を開く折りたたみの見出し。
+  fixedVariableNoteHeading: '固定費・変動費について',
   fixedVariableNote:
     '固定費・変動費の分類は、生活設計上の目安です。実際には家庭ごとに異なる場合があります。',
   breakdownHeading: '支出の内訳',
@@ -285,6 +289,9 @@ export const SCENARIO = {
   resetCategory: '元に戻す',
   resetAll: '試算をリセットする',
   trialBadge: '試算中',
+  // カテゴリ選択チップの読み上げ用ラベル（名称・金額に続けて状態を伝える）。
+  chipSelected: '選択中',
+  chipUnselected: '未選択',
   summaryHeading: '見直し後の生活費',
   unit: '円',
 };
@@ -334,6 +341,3 @@ export const COMPOSITION = {
     'この比較は、総務省「家計調査報告 家計収支編 2025年平均結果」の二人以上世帯の費目別支出をもとに、LIFE PLAN LAB のカテゴリに近い項目へ対応させた参考値です。これは生活費全体の比率ではなく、比較対象カテゴリ内の構成比で、住宅費・保険料・サブスク・その他は分母に含めていません。良い悪いを示すものではなく、支出バランスを見る参考としてご覧ください。',
   noteHeading: 'この参考比較について',
 };
-
-/** 「人生全体の資産推移で見る」の仮の遷移先（総合版の実 URL は今回変更しない）。 */
-export const COMPREHENSIVE_URL_PLACEHOLDER = 'https://example.com/life-plan-lab/';

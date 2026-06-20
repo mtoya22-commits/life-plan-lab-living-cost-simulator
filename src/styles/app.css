@@ -115,12 +115,14 @@
   font-size: 1.05rem;
   padding: 10px 12px;
   text-align: right;
+  font-variant-numeric: tabular-nums;
 }
 .numfield__input:focus {
   outline: none;
   border-color: var(--accent);
 }
 .numfield__unit {
+  flex: 0 0 auto;
   color: var(--muted);
   font-size: 0.9rem;
 }
