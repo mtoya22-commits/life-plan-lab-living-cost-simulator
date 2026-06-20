@@ -8,6 +8,18 @@
   padding-bottom: 32px;
 }
 
+/* iframe 埋め込み時（initIframeResize が html に付与）: 入力画面を 100svh 固定から
+   自然フローへ切り替える。親が iframe 高さをコンテンツに追従させ、WordPress 側で
+   1本のスクロールにまとめるため（二重スクロールと下端の見切れを防ぐ）。
+   スタンドアロン表示では適用されず、従来の 100svh 設計のまま。 */
+.is-embedded .step-layout {
+  height: auto;
+  overflow: visible;
+}
+.is-embedded .bottom-nav {
+  position: static;
+}
+
 /* 汎用カード（shared-tokens の .collapsible と同じ面・角丸・影） */
 .card {
   background: var(--surface);

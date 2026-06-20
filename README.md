@@ -76,6 +76,69 @@ npm run build    # 本番ビルド（dist/、base: './' の相対パス出力）
 また、総合版から現在の生活費を渡す将来フックとして `?ref=<円>` を読み取り、
 入力／結果画面で参考値との差をやさしく表示します。
 
+## WordPress への埋め込み（iframe オートリサイズ）
+
+総合版（WordPress）に iframe で埋め込むと、結果画面は縦に長いため固定高では下端が見切れます。
+本アプリは埋め込み時のみ、自分のコンテンツ高さを親へ `postMessage` で送り、親が iframe を
+中身に合わせて伸縮できるようにしています（`src/lib/iframeResize.ts`）。
+
+- 送るメッセージ: `{ type: 'lifeplanlab:resize', source: 'living-cost-simulator', height: <px> }`
+- 埋め込み時は `<html>` に `is-embedded` が付き、入力画面も自然フロー（親スクロール）になります。
+  スタンドアロン表示（GitHub Pages 直接）では従来どおりで、挙動は変わりません。
+
+WordPress 側のコピペ用 Custom HTML（受信スクリプト込み）:
+
+```html
+<!-- wp:html -->
+<style>
+  .lifeplan-embed-wrap { margin: 0; padding: 0; }
+  .lifeplan-embed-frame { width: 100%; height: 720px; min-height: 720px; border: 0; display: block; }
+</style>
+<div class="lifeplan-embed-wrap">
+  <iframe
+    id="lifeplan-livingcost-frame"
+    class="lifeplan-embed-frame lifeplanlab-frame"
+    data-lifeplanlab-source="living-cost-simulator"
+    src="https://mtoya22-commits.github.io/life-plan-lab-living-cost-simulator/"
+    title="生活費見直しシミュレーター"
+    scrolling="no"
+    loading="lazy">
+  </iframe>
+</div>
+<script>
+(function () {
+  var MIN_HEIGHT = 720;
+  var MAX_HEIGHT = 6000; // 結果画面が長いため大きめに（ローン版の 3000 では足りない場合あり）
+  var RESIZE_TYPE = "lifeplanlab:resize";
+  function findFrame(event, data) {
+    var frames = document.querySelectorAll("iframe.lifeplanlab-frame");
+    for (var i = 0; i < frames.length; i++) {
+      var frame = frames[i];
+      if (event.source !== frame.contentWindow) continue;
+      if (data.source && frame.getAttribute("data-lifeplanlab-source") !== data.source) continue;
+      return frame;
+    }
+    return null;
+  }
+  window.addEventListener("message", function (event) {
+    var data = event.data;
+    if (!data || typeof data !== "object" || data.type !== RESIZE_TYPE) return;
+    var frame = findFrame(event, data);
+    if (!frame) return;
+    var h = parseInt(data.height, 10) || 0;
+    var next = Math.min(Math.max(h, MIN_HEIGHT), MAX_HEIGHT);
+    frame.style.height = next + "px";
+    frame.style.minHeight = next + "px";
+  });
+})();
+</script>
+<!-- /wp:html -->
+```
+
+> 重要: `class="lifeplanlab-frame"` と `data-lifeplanlab-source="living-cost-simulator"` を必ず付けてください
+> （アプリが送る `source` と一致しないと高さが反映されません）。`MAX_HEIGHT` は結果画面の高さに合わせて
+> 大きめにします（スマホ幅では縦に長くなるため）。
+
 ## 試算と入力条件の扱い
 
 - QuickAdjust とカテゴリ別シナリオは結果画面上の**一時試算**です。入力条件そのものは変えません。
