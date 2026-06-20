@@ -25,6 +25,15 @@ npm test         # vitest（計算ロジック等のテスト）
 npm run build    # 本番ビルド（dist/、base: './' の相対パス出力）
 ```
 
+## 環境変数
+
+| 変数 | 用途 |
+|---|---|
+| `VITE_LIFE_PLAN_LAB_URL` | 「人生全体の資産推移で見る」リンクの遷移先。未設定時は本番デフォルト `https://fire-lifeplan-lab.com/life-plan-simulator/` を使います。 |
+
+ビルド時に値を埋め込みたい場合は `.env` などで設定します（例: `VITE_LIFE_PLAN_LAB_URL=https://…`）。
+未設定でも本番 URL に遷移し、プレースホルダ URL へは遷移しません。
+
 ## GitHub Pages 公開
 
 - `.github/workflows/deploy-pages.yml` により、`main` への push または手動実行

@@ -80,7 +80,7 @@ export default function InputScreen({
         )}
 
         <details className="collapsible collapsible--muted">
-          <summary>住宅ローン・教育費の扱い</summary>
+          <summary>{INPUT.mortgageHeading}</summary>
           <div className="collapsible__body">
             <p className="muted">{INPUT.mortgageNote}</p>
             <p className="muted">{INPUT.educationNote}</p>

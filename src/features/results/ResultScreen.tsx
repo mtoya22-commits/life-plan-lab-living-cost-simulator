@@ -9,10 +9,10 @@ import { adjustedMonthly, buildStoragePayload, resolveSelectedMonthly } from '..
 import { getReviewPoints } from '../../lib/reviewRules';
 import { buildCategoryScenario, hasCategoryScenario } from '../../lib/categoryScenario';
 import { buildCompositionComparison } from '../../lib/compositionReference';
-import { buildComprehensiveUrl } from '../../lib/comprehensiveLink';
+import { LIFE_PLAN_LAB_URL, buildComprehensiveUrl } from '../../lib/comprehensiveLink';
 import { saveLivingCost } from '../../lib/storage';
 import { formatManYen, formatMonthlyYen, formatYen } from '../../lib/format';
-import { CATEGORY_LABELS, COMPREHENSIVE_URL_PLACEHOLDER, INPUT, RESULT } from '../../strings/ja';
+import { CATEGORY_LABELS, INPUT, RESULT } from '../../strings/ja';
 import DetailCard from './DetailCard';
 import BreakdownBars from './BreakdownBars';
 import ReviewPoints from './ReviewPoints';
@@ -83,11 +83,7 @@ export default function ResultScreen({ input, result, onRecalc }: Props) {
     quickAdjustedMonthlyTotal: hasQuickAdjust ? quickAdjustedTotal : undefined,
     categoryScenarioMonthlyTotal: hasScenario ? scenario.scenarioMonthlyTotal : undefined,
   });
-  const comprehensiveUrl = buildComprehensiveUrl(
-    COMPREHENSIVE_URL_PLACEHOLDER,
-    linkMonthly,
-    reflectedSource,
-  );
+  const comprehensiveUrl = buildComprehensiveUrl(LIFE_PLAN_LAB_URL, linkMonthly, reflectedSource);
 
   return (
     <div className="screen fade-rise">
@@ -160,7 +156,7 @@ export default function ResultScreen({ input, result, onRecalc }: Props) {
           variableRatio={result.variableRatio}
         />
         <details className="collapsible collapsible--muted">
-          <summary>固定費・変動費について</summary>
+          <summary>{RESULT.fixedVariableNoteHeading}</summary>
           <div className="collapsible__body">
             <p className="muted">{RESULT.fixedVariableNote}</p>
           </div>
