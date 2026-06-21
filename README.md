@@ -76,6 +76,19 @@ npm run build    # 本番ビルド（dist/、base: './' の相対パス出力）
 また、総合版から現在の生活費を渡す将来フックとして `?ref=<円>` を読み取り、
 入力／結果画面で参考値との差をやさしく表示します。
 
+## WordPress への埋め込み（iframe オートリサイズ）
+
+総合版（WordPress）に iframe で埋め込むと、結果画面は縦に長いため固定高では下端が見切れます。
+本アプリは埋め込み時のみ、自分の実コンテンツ高さ（`.app` 基準）を親へ `postMessage` で送り、
+親が iframe を中身に合わせて伸縮できるようにしています（`src/lib/iframeResize.ts`）。
+
+- 高さ通知: `{ type: 'lifeplanlab:resize', source: 'living-cost-simulator', height: <px> }`
+- 画面遷移通知: `{ type: 'lifeplanlab:scrollTop', source: 'living-cost-simulator' }`
+- 埋め込み時は `<html>` に `is-embedded` が付き、入力画面も結果画面も親ページのスクロール1本に
+  なります。スタンドアロン表示（GitHub Pages 直接）では従来どおりで、挙動は変わりません。
+
+**WordPress 固定ページへ貼るコード（カスタム HTML）と詳しい手順は [`docs/EMBED.md`](docs/EMBED.md) を参照してください。**
+
 ## 試算と入力条件の扱い
 
 - QuickAdjust とカテゴリ別シナリオは結果画面上の**一時試算**です。入力条件そのものは変えません。

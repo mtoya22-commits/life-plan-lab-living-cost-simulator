@@ -150,6 +150,11 @@ localStorage 自動保存（キー例 `fire-lifeplan-lab.v2.session.v1`）＋「
   - `html, body { overscroll-behavior: contain }` でスクロール連鎖を遮断。
   - `.step-layout` を `100svh` 固定して iOS Safari の URL bar 問題を回避。
   - 残る制約: URL bar overlay（半透明）が下端を覆うのは OS 由来で消せない。content 密度で吸収する。
+  - **高さオートリサイズ**: 子は `{ type:'lifeplanlab:resize', source:<id>, height:<px> }` を親へ postMessage で送り、
+    親（WordPress）は `data-lifeplanlab-source` でフレームを識別して iframe 高さを clamp して合わせる。
+    クロスオリジンで親からは測れないため子が送る。結果画面が長いシミュレーターでは親の MAX_HEIGHT を
+    大きめにする。生活費見直しシミュレーターは `source:'living-cost-simulator'`、埋め込み時に `<html>` へ
+    `is-embedded` を付けて入力画面も自然フロー（親スクロール）に切り替える（`src/lib/iframeResize.ts`）。
 
 ---
 

@@ -3,6 +3,7 @@ import type { CategoryAmounts, HouseholdSize, LivingCostInput } from './types/li
 import { calcResult, sanitizeAmount, sumBreakdown } from './lib/calc';
 import { CATEGORY_KEYS } from './lib/classification';
 import { clearDraft, loadDraft, saveDraft } from './lib/storage';
+import { notifyScreenChange } from './lib/iframeResize';
 import IntroScreen from './features/intro/IntroScreen';
 import InputScreen from './features/input/InputScreen';
 import ResultScreen from './features/results/ResultScreen';
@@ -54,6 +55,16 @@ export default function App() {
     }, 400);
     return () => clearTimeout(timer);
   }, [phase, categories, householdSize]);
+
+  // 画面遷移ごとに親（埋め込み時のみ）へ先頭スクロール＋高さ再送を通知。初回マウントはスキップ。
+  const firstPhase = useRef(true);
+  useEffect(() => {
+    if (firstPhase.current) {
+      firstPhase.current = false;
+      return;
+    }
+    notifyScreenChange();
+  }, [phase]);
 
   const resumeFromDraft = () => {
     if (initialDraft) {
