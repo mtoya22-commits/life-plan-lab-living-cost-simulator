@@ -8,16 +8,33 @@
   padding-bottom: 32px;
 }
 
-/* iframe 埋め込み時（initIframeResize が html に付与）: 入力画面を 100svh 固定から
-   自然フローへ切り替える。親が iframe 高さをコンテンツに追従させ、WordPress 側で
-   1本のスクロールにまとめるため（二重スクロールと下端の見切れを防ぐ）。
-   スタンドアロン表示では適用されず、従来の 100svh 設計のまま。 */
+/* iframe 埋め込み時（initIframeResize が html に付与）: 入力画面を 100svh 固定＋
+   内部スクロールから「自然フロー」へ切り替える。これにより親が iframe 高さをコンテンツに
+   追従でき、WordPress 親ページのスクロール1本に統一される（アプリ内スクロール・iframe 内
+   スクロールをなくし、三重スクロールを解消）。スタンドアロン表示では適用されず、
+   従来の 100svh 固定＋下部ナビ固定＋内部スクロールのまま。 */
 .is-embedded .step-layout {
   height: auto;
+  min-height: 0;
   overflow: visible;
+}
+.is-embedded .step-content {
+  flex: 0 0 auto;
+  min-height: auto;
+  overflow: visible;
+  -webkit-overflow-scrolling: auto;
+  padding-bottom: 16px;
 }
 .is-embedded .bottom-nav {
   position: static;
+  bottom: auto;
+  z-index: auto;
+  backdrop-filter: none;
+}
+/* 埋め込み時は iframe 内に不要な縦スクロールバーを出さない（高さは親が追従）。 */
+.is-embedded,
+.is-embedded body {
+  overflow: visible;
 }
 
 /* 汎用カード（shared-tokens の .collapsible と同じ面・角丸・影） */
