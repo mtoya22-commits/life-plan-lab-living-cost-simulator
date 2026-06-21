@@ -22,3 +22,18 @@ export function buildComprehensiveUrl(
   });
   return `${base}${sep}${params.toString()}`;
 }
+
+// 「人生全体の資産推移で見る」押下時の流れ: まず確定データを保存し、成功したときだけ遷移する。
+// 失敗時は遷移せず onSaveFailed を呼ぶ（既存の RESULT.reflectFailed を表示）。DOM 非依存。
+export function handoffToComprehensive(opts: {
+  save: () => boolean;
+  navigate: () => void;
+  onSaveFailed: () => void;
+}): boolean {
+  if (!opts.save()) {
+    opts.onSaveFailed();
+    return false;
+  }
+  opts.navigate();
+  return true;
+}

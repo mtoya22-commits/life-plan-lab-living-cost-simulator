@@ -46,6 +46,26 @@ export function isEmbedded(): boolean {
   return typeof window !== 'undefined' && window.parent !== window;
 }
 
+/**
+ * ブラウザ最上位（親ページ）で URL へ遷移する。
+ * iframe 埋め込み時は window.top を遷移させ、総合版が iframe 内に開くのを防ぐ。
+ * top にアクセスできない場合は自フレームで遷移する。スタンドアロンでは通常遷移。
+ */
+export function navigateTop(url: string): void {
+  if (typeof window === 'undefined') return;
+  try {
+    const top = window.top;
+    if (top) {
+      // クロスオリジンでも location.href への代入は許可される（読み取りは不可）。
+      top.location.href = url;
+      return;
+    }
+  } catch {
+    // 取得不可時は下のフォールバックへ。
+  }
+  window.location.href = url;
+}
+
 /** 計測対象の要素（.app 優先・無ければ #root）。 */
 function measureTarget(): HTMLElement | null {
   return document.querySelector<HTMLElement>('.app') ?? document.getElementById('root');

@@ -9,7 +9,12 @@ import { adjustedMonthly, buildStoragePayload, resolveSelectedMonthly } from '..
 import { getReviewPoints } from '../../lib/reviewRules';
 import { buildCategoryScenario, hasCategoryScenario } from '../../lib/categoryScenario';
 import { buildCompositionComparison } from '../../lib/compositionReference';
-import { LIFE_PLAN_LAB_URL, buildComprehensiveUrl } from '../../lib/comprehensiveLink';
+import {
+  LIFE_PLAN_LAB_URL,
+  buildComprehensiveUrl,
+  handoffToComprehensive,
+} from '../../lib/comprehensiveLink';
+import { navigateTop } from '../../lib/iframeResize';
 import { saveLivingCost } from '../../lib/storage';
 import { formatManYen, formatMonthlyYen, formatYen } from '../../lib/format';
 import { CATEGORY_LABELS, INPUT, RESULT } from '../../strings/ja';
@@ -54,15 +59,17 @@ export default function ResultScreen({ input, result, onRecalc }: Props) {
   const scenario = buildCategoryScenario(result, scenarioOverrides);
   const hasScenario = hasCategoryScenario(scenario);
 
-  const reflect = (source: SelectedMonthlySource) => {
-    const payload = buildStoragePayload({
+  const makePayload = (source: SelectedMonthlySource) =>
+    buildStoragePayload({
       result,
       categories: input.categories,
       selectedSource: source,
       quickAdjustedMonthlyTotal: hasQuickAdjust ? quickAdjustedTotal : undefined,
       categoryScenario: hasScenario ? scenario : undefined,
     });
-    const ok = saveLivingCost(payload);
+
+  const reflect = (source: SelectedMonthlySource) => {
+    const ok = saveLivingCost(makePayload(source));
     if (!ok) {
       setSavedMessage(RESULT.reflectFailed);
       return;
@@ -84,6 +91,15 @@ export default function ResultScreen({ input, result, onRecalc }: Props) {
     categoryScenarioMonthlyTotal: hasScenario ? scenario.scenarioMonthlyTotal : undefined,
   });
   const comprehensiveUrl = buildComprehensiveUrl(LIFE_PLAN_LAB_URL, linkMonthly, reflectedSource);
+
+  // 「人生全体の資産推移で見る」: 現在の reflectedSource で確定保存し、成功時のみ親ページ全体で総合版を開く。
+  const goToComprehensive = () => {
+    handoffToComprehensive({
+      save: () => saveLivingCost(makePayload(reflectedSource)),
+      navigate: () => navigateTop(comprehensiveUrl),
+      onSaveFailed: () => setSavedMessage(RESULT.reflectFailed),
+    });
+  };
 
   return (
     <div className="screen fade-rise">
@@ -252,9 +268,13 @@ export default function ResultScreen({ input, result, onRecalc }: Props) {
             {savedMessage}
           </p>
         )}
-        <a className="btn btn--block reflect__link" href={comprehensiveUrl}>
+        <button
+          type="button"
+          className="btn btn--block reflect__link"
+          onClick={goToComprehensive}
+        >
           {RESULT.toComprehensive}
-        </a>
+        </button>
       </section>
 
       <button type="button" className="btn btn--block" onClick={onRecalc}>
