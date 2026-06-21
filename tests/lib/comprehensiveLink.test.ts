@@ -1,5 +1,9 @@
-import { describe, it, expect } from 'vitest';
-import { LIFE_PLAN_LAB_URL, buildComprehensiveUrl } from '../../src/lib/comprehensiveLink';
+import { describe, it, expect, vi } from 'vitest';
+import {
+  LIFE_PLAN_LAB_URL,
+  buildComprehensiveUrl,
+  handoffToComprehensive,
+} from '../../src/lib/comprehensiveLink';
 
 describe('LIFE_PLAN_LAB_URL', () => {
   it('本番デフォルトは fire-lifeplan-lab.com（env 未設定時）', () => {
@@ -43,5 +47,25 @@ describe('buildComprehensiveUrl', () => {
   it('汎用名 monthly 単体は使わない（衝突回避）', () => {
     const url = buildComprehensiveUrl('https://example.com/', 100000, 'breakdownTotal');
     expect(url).not.toMatch(/[?&]monthly=/);
+  });
+});
+
+describe('handoffToComprehensive', () => {
+  it('保存成功時のみ遷移する（navigate が1回・onSaveFailed は呼ばれない）', () => {
+    const navigate = vi.fn();
+    const onSaveFailed = vi.fn();
+    const result = handoffToComprehensive({ save: () => true, navigate, onSaveFailed });
+    expect(result).toBe(true);
+    expect(navigate).toHaveBeenCalledTimes(1);
+    expect(onSaveFailed).not.toHaveBeenCalled();
+  });
+
+  it('保存失敗時は遷移せず onSaveFailed を呼ぶ', () => {
+    const navigate = vi.fn();
+    const onSaveFailed = vi.fn();
+    const result = handoffToComprehensive({ save: () => false, navigate, onSaveFailed });
+    expect(result).toBe(false);
+    expect(navigate).not.toHaveBeenCalled();
+    expect(onSaveFailed).toHaveBeenCalledTimes(1);
   });
 });
