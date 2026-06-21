@@ -1,22 +1,45 @@
 import { describe, it, expect } from 'vitest';
-import { buildResizeMessage, isEmbedded } from '../../src/lib/iframeResize';
+import {
+  buildResizeMessage,
+  buildScrollTopMessage,
+  clampHeight,
+  isEmbedded,
+} from '../../src/lib/iframeResize';
+
+describe('clampHeight', () => {
+  it('実コンテンツ高さに 8px の安全余白を足す', () => {
+    expect(clampHeight(800)).toBe(808);
+    expect(clampHeight(400)).toBe(408);
+  });
+
+  it('小数は切り上げてから余白を足す', () => {
+    expect(clampHeight(1234.2)).toBe(1243); // ceil(1234.2)=1235 +8
+  });
+
+  it('最低高さ 320px を下回らない（小さい値・負値・NaN・Infinity）', () => {
+    expect(clampHeight(100)).toBe(320);
+    expect(clampHeight(0)).toBe(320);
+    expect(clampHeight(-50)).toBe(320);
+    expect(clampHeight(Number.NaN)).toBe(320);
+    expect(clampHeight(Number.POSITIVE_INFINITY)).toBe(320);
+  });
+});
 
 describe('buildResizeMessage', () => {
-  it('type と source を固定値で返す', () => {
+  it('type と source を固定値で返し、height は clampHeight 済み', () => {
     const msg = buildResizeMessage(800);
     expect(msg.type).toBe('lifeplanlab:resize');
     expect(msg.source).toBe('living-cost-simulator');
-    expect(msg.height).toBe(800);
+    expect(msg.height).toBe(808);
   });
+});
 
-  it('小数は切り上げる', () => {
-    expect(buildResizeMessage(1234.2).height).toBe(1235);
-  });
-
-  it('負値・NaN・Infinity は 0 にする', () => {
-    expect(buildResizeMessage(-50).height).toBe(0);
-    expect(buildResizeMessage(Number.NaN).height).toBe(0);
-    expect(buildResizeMessage(Number.POSITIVE_INFINITY).height).toBe(0);
+describe('buildScrollTopMessage', () => {
+  it('画面遷移用の scrollTop メッセージを返す', () => {
+    expect(buildScrollTopMessage()).toEqual({
+      type: 'lifeplanlab:scrollTop',
+      source: 'living-cost-simulator',
+    });
   });
 });
 
